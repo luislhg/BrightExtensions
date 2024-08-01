@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "BrightXaml.Extensibility": {
+      "commandName": "Project"
+    },
+    "BrightXaml.Extensibility Debug": {
+      "commandName": "Project",
+      "commandLineArgs": "\"D:\\Projects Visual Studio\\Test Projects\\TestWPFNETCore\\TestWPFNETCore.sln\""
+    }
+  }
+}

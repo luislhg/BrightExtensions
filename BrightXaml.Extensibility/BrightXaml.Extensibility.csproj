@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net8.0-windows</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>disable</Nullable>
+
+		<Version>1.1.0.0</Version>
+	</PropertyGroup>
+	<ItemGroup>
+		<None Remove="Windows\ChooseItemWindowContent.xaml" />
+		<None Remove="Windows\HelpWindowContent.xaml" />
+		<None Remove="Windows\ProgressWindowContent.xaml" />
+		<None Remove="Windows\SettingsWindowContent.xaml" />
+	</ItemGroup>
+	<ItemGroup>
+		<EmbeddedResource Include="Windows\ChooseItemWindowContent.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</EmbeddedResource>
+		<EmbeddedResource Include="Windows\HelpWindowContent.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</EmbeddedResource>
+		<EmbeddedResource Include="Windows\ProgressWindowContent.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</EmbeddedResource>
+		<EmbeddedResource Include="Windows\SettingsWindowContent.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</EmbeddedResource>
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.VisualStudio.Extensibility.Sdk" Version="17.10.2084" />
+		<PackageReference Include="Microsoft.VisualStudio.Extensibility.Build" Version="17.10.2084" />
+		<!--<PackageReference Include="Microsoft.VisualStudio.SDK" Version="17.10.40171" ExcludeAssets="runtime" />-->
+	</ItemGroup>
+</Project>

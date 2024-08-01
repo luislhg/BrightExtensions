@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "BrightGit.ConsoleHooks": {
+      "commandName": "Project",
+      "commandLineArgs": "arg1\r\narg2\r\narg3"
+    }
+  }
+}

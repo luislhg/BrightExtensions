@@ -1,0 +1,140 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0-windows</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>disable</Nullable>
+
+		<IsPackable>false</IsPackable>
+		<IsTestProject>true</IsTestProject>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Remove="Resources\FullDocument01_Bad.xml" />
+		<None Remove="Resources\FullDocument01_Good.xml" />
+		<None Remove="Resources\FullDocument02_Bad.xml" />
+		<None Remove="Resources\FullDocument02_Good.xml" />
+		<None Remove="Resources\FullDocument03_Bad.xml" />
+		<None Remove="Resources\FullDocument03_Good.xml" />
+		<None Remove="Resources\FullDocument04_Bad.xml" />
+		<None Remove="Resources\FullDocument04_Good.xml" />
+		<None Remove="Resources\MultipleLine01_Bad.xml" />
+		<None Remove="Resources\MultipleLine01_Good.xml" />
+		<None Remove="Resources\MultipleLine02_Bad.xml" />
+		<None Remove="Resources\MultipleLine02_Good.xml" />
+		<None Remove="Resources\MultipleLine03_Bad.xml" />
+		<None Remove="Resources\MultipleLine03_Good.xml" />
+		<None Remove="Resources\MultipleLine04_Bad.xml" />
+		<None Remove="Resources\MultipleLine04_Good.xml" />
+		<None Remove="Resources\MultipleLine05_Bad.xml" />
+		<None Remove="Resources\MultipleLine05_Good.xml" />
+		<None Remove="Resources\MultipleLine06_Bad.xml" />
+		<None Remove="Resources\MultipleLine06_Good.xml" />
+		<None Remove="Resources\SingleLine01_Bad.xml" />
+		<None Remove="Resources\SingleLine01_Good.xml" />
+		<None Remove="Resources\SingleLine02_Bad.xml" />
+		<None Remove="Resources\SingleLine02_Good.xml" />
+		<None Remove="Resources\SingleLine03_Bad.xml" />
+		<None Remove="Resources\SingleLine03_Good.xml" />
+		<None Remove="Resources\SingleLine04_Bad.xml" />
+		<None Remove="Resources\SingleLine04_Good.xml" />
+		<None Remove="Resources\SingleLine05_Bad.xml" />
+		<None Remove="Resources\SingleLine05_Good.xml" />
+		<None Remove="Resources\SingleLineComment01_Bad.xml" />
+		<None Remove="Resources\SingleLineComment01_Good.xml" />
+		<None Remove="Resources\SingleLineComment02_Bad.xml" />
+		<None Remove="Resources\SingleLineComment02_Good.xml" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<EmbeddedResource Include="Resources\FullDocument04_Good.xml" />
+		<EmbeddedResource Include="Resources\FullDocument04_Bad.xml" />
+		<EmbeddedResource Include="Resources\FullDocument03_Good.xml" />
+		<EmbeddedResource Include="Resources\FullDocument03_Bad.xml" />
+		<EmbeddedResource Include="Resources\FullDocument02_Good.xml" />
+		<EmbeddedResource Include="Resources\FullDocument02_Bad.xml" />
+		<EmbeddedResource Include="Resources\FullDocument01_Bad.xml" />
+		<EmbeddedResource Include="Resources\FullDocument01_Good.xml" />
+		<EmbeddedResource Include="Resources\MultipleLine02_Good.xml">
+			<Generator>XamlIntelliSenseFileGenerator</Generator>
+		</EmbeddedResource>
+		<EmbeddedResource Include="Resources\MultipleLine02_Bad.xml">
+			<Generator>XamlIntelliSenseFileGenerator</Generator>
+		</EmbeddedResource>
+		<EmbeddedResource Include="Resources\MultipleLine01_Bad.xml">
+			<Generator>XamlIntelliSenseFileGenerator</Generator>
+		</EmbeddedResource>
+		<EmbeddedResource Include="Resources\MultipleLine01_Good.xml">
+			<Generator>XamlIntelliSenseFileGenerator</Generator>
+		</EmbeddedResource>
+		<EmbeddedResource Include="Resources\MultipleLine06_Bad.xml">
+			<Generator>XamlIntelliSenseFileGenerator</Generator>
+		</EmbeddedResource>
+		<EmbeddedResource Include="Resources\MultipleLine06_Good.xml">
+			<Generator>XamlIntelliSenseFileGenerator</Generator>
+		</EmbeddedResource>
+		<EmbeddedResource Include="Resources\MultipleLine05_Good.xml">
+			<Generator>XamlIntelliSenseFileGenerator</Generator>
+		</EmbeddedResource>
+		<EmbeddedResource Include="Resources\MultipleLine05_Bad.xml">
+			<Generator>XamlIntelliSenseFileGenerator</Generator>
+		</EmbeddedResource>
+		<EmbeddedResource Include="Resources\MultipleLine04_Good.xml">
+			<Generator>XamlIntelliSenseFileGenerator</Generator>
+		</EmbeddedResource>
+		<EmbeddedResource Include="Resources\MultipleLine04_Bad.xml">
+			<Generator>XamlIntelliSenseFileGenerator</Generator>
+		</EmbeddedResource>
+		<EmbeddedResource Include="Resources\MultipleLine03_Bad.xml">
+			<Generator>XamlIntelliSenseFileGenerator</Generator>
+		</EmbeddedResource>
+		<EmbeddedResource Include="Resources\MultipleLine03_Good.xml">
+			<Generator>XamlIntelliSenseFileGenerator</Generator>
+		</EmbeddedResource>
+		<EmbeddedResource Include="Resources\SingleLineComment02_Good.xml" />
+		<EmbeddedResource Include="Resources\SingleLineComment02_Bad.xml">
+			<Generator>MSBuild:Compile</Generator>
+		</EmbeddedResource>
+		<EmbeddedResource Include="Resources\SingleLineComment01_Good.xml" />
+		<EmbeddedResource Include="Resources\SingleLineComment01_Bad.xml">
+			<Generator>MSBuild:Compile</Generator>
+		</EmbeddedResource>
+		<EmbeddedResource Include="Resources\SingleLine01_Bad.xml">
+			<Generator>MSBuild:Compile</Generator>
+		</EmbeddedResource>
+		<EmbeddedResource Include="Resources\SingleLine01_Good.xml" />
+		<EmbeddedResource Include="Resources\SingleLine02_Bad.xml">
+			<Generator>MSBuild:Compile</Generator>
+		</EmbeddedResource>
+		<EmbeddedResource Include="Resources\SingleLine02_Good.xml" />
+		<EmbeddedResource Include="Resources\SingleLine04_Good.xml" />
+		<EmbeddedResource Include="Resources\SingleLine04_Bad.xml">
+			<Generator>MSBuild:Compile</Generator>
+		</EmbeddedResource>
+		<EmbeddedResource Include="Resources\SingleLine03_Bad.xml">
+			<Generator>MSBuild:Compile</Generator>
+		</EmbeddedResource>
+		<EmbeddedResource Include="Resources\SingleLine03_Good.xml" />
+		<EmbeddedResource Include="Resources\SingleLine05_Bad.xml">
+			<Generator>MSBuild:Compile</Generator>
+		</EmbeddedResource>
+		<EmbeddedResource Include="Resources\SingleLine05_Good.xml">
+			<Generator>MSBuild:Compile</Generator>
+		</EmbeddedResource>
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="coverlet.collector" Version="6.0.0" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+		<PackageReference Include="MSTest.TestAdapter" Version="3.1.1" />
+		<PackageReference Include="MSTest.TestFramework" Version="3.1.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\BrightXaml.Extensibility\BrightXaml.Extensibility.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
+	</ItemGroup>
+</Project>

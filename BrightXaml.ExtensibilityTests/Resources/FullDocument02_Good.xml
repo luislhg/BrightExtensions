@@ -1,0 +1,100 @@
+﻿<Window x:Class="ChatGPT.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ChatGPT"
+        xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        mc:Ignorable="d"
+        Title="Power GPT (Beta)"
+        MinHeight="400" Height="600"
+        MinWidth="400" Width="800"
+        Loaded="Window_Loaded">
+	<Window.DataContext>
+		<local:MainViewModel />
+	</Window.DataContext>
+	<Window.Resources>
+		<sys:Double x:Key="TabMinWidth">120</sys:Double>
+		<sys:Double x:Key="ButtonMinWidth">80</sys:Double>
+		<sys:Double x:Key="ButtonMinHeight">20</sys:Double>
+	</Window.Resources>
+	<!--Menu-->
+	<TabControl>
+		<TabItem Header="Chat (Browser)" MinWidth="{StaticResource TabMinWidth}">
+			<Grid>
+				<Grid.RowDefinitions>
+					<RowDefinition Height="auto"/>
+					<RowDefinition Height="*"/>
+				</Grid.RowDefinitions>
+				<StackPanel Orientation="Horizontal">
+					<Button MinWidth="{StaticResource ButtonMinWidth}" MinHeight="{StaticResource ButtonMinHeight}"/>
+					<TextBlock Text="{Binding ChatTopics.Count, FallbackValue=null}"/>
+					<Button Content="OpenMenu" Click="Button_Click"/>
+				</StackPanel>
+
+				<wv2:WebView2
+					Name="BrowserChat" Grid.Row="1"/>
+			</Grid>
+		</TabItem>
+		<TabItem Header="Playground (Browser)" MinWidth="{StaticResource TabMinWidth}">
+			<wv2:WebView2 Name="BrowserPlayground"/>
+		</TabItem>
+		<TabItem Header="Chat (Puppeteer)" MinWidth="{StaticResource TabMinWidth}">
+			<Grid>
+				<Grid.RowDefinitions>
+					<RowDefinition Height="auto"/>
+					<RowDefinition Height="*"/>
+				</Grid.RowDefinitions>
+				<!--<Button Content="AI Process Image" Command="{Binding LoadMenuImageCommand}"/>-->
+				<StackPanel Orientation="Horizontal">
+					<Button MinWidth="{StaticResource ButtonMinWidth}" MinHeight="{StaticResource ButtonMinHeight}"/>
+					<TextBlock Text="{Binding ChatTopics.Count, FallbackValue=null}"/>
+					<Button Content="Test" Click="Button_Click_1"/>
+				</StackPanel>
+				<TextBox Name="TboxPuppeteer" AcceptsReturn="True" Grid.Row="1"/>
+			</Grid>
+		</TabItem>
+		<TabItem
+			Header="API" MinWidth="{StaticResource TabMinWidth}">
+			<Grid>
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition />
+					<ColumnDefinition />
+				</Grid.ColumnDefinitions>
+				<StackPanel>
+					<Button Content="Start" Command="{Binding StartCommand}" Margin="4"/>
+					<TextBlock Text="Prompt" Margin="4" />
+					<TextBox AcceptsReturn="True" MinHeight="100" Margin="4"
+                             Text="{Binding Prompt}"/>
+					<Button Content="Run" Command="{Binding RunCommand}" Margin="4"/>
+					<TextBlock Text="Result" Margin="4"/>
+					<TextBox AcceptsReturn="True" IsReadOnly="True" MinHeight="100" Margin="4"
+                             Text="{Binding Result}"/>
+				</StackPanel>
+			</Grid>
+		</TabItem>
+		<!--Dall-e 3-->
+		<TabItem Header="Instafy (WIP)"
+				 MinWidth="{StaticResource TabMinWidth}">
+			<StackPanel>
+				<TextBlock Text="Prompt" Margin="4" />
+				<TextBox AcceptsReturn="True" MinHeight="100" Margin="4"
+                         Text="{Binding InstaPrompt}"/>
+				<Button Content="Complete" Command="{Binding InstaCompleteCommand}" Margin="4"/>
+				<Button Content="Chat" Command="{Binding InstaChatCommand}" Margin="4"/>
+				<Button Content="Conversation" Command="{Binding InstaConversationCommand}" Margin="4"/>
+				<TextBlock Text="Result" Margin="4"/>
+				<TextBox AcceptsReturn="True" TextWrapping="WrapWithOverflow" IsReadOnly="True"
+						 MinHeight="60" Margin="4"
+                         Text="{Binding InstaResult}" />
+				<Button Content="Copy to Clipboard" Command="{Binding CopyToClipboardCommand}" Margin="4"/>
+			</StackPanel>
+		</TabItem>
+		<TabItem Header="InstaGPT (WIP)" MinWidth="{StaticResource TabMinWidth}">
+			<TextBlock Text="In development"
+					   TextAlignment="Center" VerticalAlignment="Center"
+					   FontSize="20"/>
+		</TabItem>
+	</TabControl>
+</Window>

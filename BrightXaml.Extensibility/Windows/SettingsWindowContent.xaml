@@ -1,0 +1,100 @@
+﻿<DataTemplate xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+              xmlns:local="clr-namespace:BrightXaml.Extensibility.Windows"
+              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+              xmlns:vs="http://schemas.microsoft.com/visualstudio/extensibility/2022/xaml"
+              xmlns:styles="clr-namespace:Microsoft.VisualStudio.Shell;assembly=Microsoft.VisualStudio.Shell.15.0"
+              xmlns:colors="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.15.0"
+              DataType="local:SettingsWindowViewModel">
+    <Grid MinWidth="300" Margin="4">
+        <Grid.Resources>
+            <Style TargetType="Label" BasedOn="{StaticResource {x:Static styles:VsResourceKeys.ThemedDialogLabelStyleKey}}" />
+            <Style TargetType="TextBox" BasedOn="{StaticResource {x:Static styles:VsResourceKeys.TextBoxStyleKey}}">
+                <Setter Property="MinWidth" Value="100"/>
+            </Style>
+            <Style TargetType="Button" BasedOn="{StaticResource {x:Static styles:VsResourceKeys.ButtonStyleKey}}" />
+            <Style TargetType="CheckBox" BasedOn="{StaticResource {x:Static styles:VsResourceKeys.CheckBoxStyleKey}}">
+                <Setter Property="Margin" Value="4" />
+            </Style>
+            <Style TargetType="TextBlock">
+                <Setter Property="Foreground" Value="{DynamicResource {x:Static styles:VsBrushes.WindowTextKey}}" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+            <Style TargetType="GroupBox">
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="Padding" Value="5, 0" />
+            </Style>
+        </Grid.Resources>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+        </Grid.RowDefinitions>
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <!-- Property to INPC -->
+                <Separator Margin="10"/>
+                <GroupBox>
+                    <GroupBox.Header>
+                        <TextBlock Text="Property to INPC" FontWeight="Bold" />
+                    </GroupBox.Header>
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,5">
+                            <CheckBox IsChecked="{Binding SettingsData.PropInpc.AddFieldAbove}"/>
+                            <TextBlock Text="Add field above property"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,5">
+                            <CheckBox IsChecked="{Binding SettingsData.PropInpc.AddFieldUnderscore}"/>
+                            <TextBlock Text="Add underscore to field"/>
+                        </StackPanel>
+
+                        <!--Preview-->
+                        <TextBlock Text="Preview" FontStyle="Italic" Margin="4"/>
+                        <TextBox Text="{Binding PreviewInpcInput}" AcceptsReturn="True" IsReadOnly="True" Margin="4"/>
+                        <TextBox Text="{Binding PreviewInpcOutput}" AcceptsReturn="True" IsReadOnly="True" Margin="4"/>
+                    </StackPanel>
+                </GroupBox>
+
+                <!-- Go To Binding Definition -->
+                <Separator Margin="10"/>
+                <GroupBox>
+                    <GroupBox.Header>
+                        <TextBlock Text="Go To Binding Definition (F12 from Xaml)" FontWeight="Bold" />
+                    </GroupBox.Header>
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,5">
+                            <CheckBox IsChecked="{Binding SettingsData.GoToBinding.IsEnabled}"/>
+                            <TextBlock Text="Automatically open ViewModel instead of Source Generator"/>
+                        </StackPanel>
+                    </StackPanel>
+                </GroupBox>
+
+                <!-- Format XAML -->
+                <Separator Margin="10" Visibility="Collapsed"/>
+                <GroupBox Visibility="Collapsed">
+                    <GroupBox.Header>
+                        <TextBlock Text="Format XAML" FontWeight="Bold" />
+                    </GroupBox.Header>
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,5">
+                            <TextBlock Text="Closing tag spaces:"/>
+                            <TextBox Text="{Binding SettingsData.FormatXaml.ClosingTagSpaces}" Margin="4"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,5">
+                            <TextBlock Text="Remove Empty Lines:"/>
+                            <CheckBox IsChecked="{Binding SettingsData.FormatXaml.RemoveEmptyLines}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </GroupBox>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!--Actions-->
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Grid.Row="1">
+            <Button Content="OK" Command="{Binding OKCommand}" Grid.Row="1" Margin="5" MinWidth="100"/>
+            <Button Content="Cancel" Command="{Binding CancelCommand}" Grid.Row="1" Margin="5" MinWidth="100"/>
+        </StackPanel>
+
+        <!--Dev Info-->
+        <TextBlock Text="Developed by Luis Goll (luislhg)" Grid.Row="2" Grid.ColumnSpan="2" HorizontalAlignment="Right" Margin="5"/>
+    </Grid>
+</DataTemplate>

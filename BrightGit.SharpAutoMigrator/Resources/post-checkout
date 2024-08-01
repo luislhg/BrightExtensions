@@ -1,0 +1,4 @@
+#!/bin/sh
+#dotnet-script '.git\hooks\post-checkout.csx' -- $1 $2 $3
+#exec .\.git\hooks\EFCoreGitHelper.exe "$1" "$2" "$3"
+exec "D:\Projects Visual Studio\Bright Soft Projects\BrightExtensions\EFCoreGitHelper\bin\Debug\EFCoreGitHelper.exe" "$1" "$2" "$3"

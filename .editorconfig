@@ -1,0 +1,4 @@
+﻿[*.cs]
+
+# CEE0027: String not localized
+dotnet_diagnostic.CEE0027.severity = silent
