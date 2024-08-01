@@ -16,7 +16,7 @@
 - **Clean Bin and Obj**: Cleans the solution by removing bin and obj folders from all projects.
 - **Kill XAML Designer**: Kills the XAML designer process to fix/restart any issues with the designer.
 
-- ### _(BETA)_ Bright Git
+### _(BETA)_ Bright Git
 
 **BrightGit** provides a set of features to streamline daily VS/Git operations and Entity Framework (EF) migrations within Visual Studio. It includes the following features:
 
