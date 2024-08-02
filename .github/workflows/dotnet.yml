@@ -30,3 +30,33 @@ jobs:
       
     - name: Test
       run: dotnet test --no-build --verbosity normal      
+
+    - name: Get version (BrightXaml)
+      id: get_version
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      run: |
+        version=$(cat BrightXaml.Extensibility.csproj | grep '<Version>' | sed -E 's/.*<Version>(.*)<\/Version>.*/\1/')
+        echo "::set-output name=version::$version"
+
+    - name: Rename VSIX file for push (BrightXaml)
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      run: |
+        version=${{ steps.get_version.outputs.version }}
+        vsix_file=$(find . -name "*.vsix")
+        new_name="BrightXaml_$version.vsix"
+        mv "$vsix_file" "./$new_name"
+
+    - name: Rename VSIX file for PR (BrightXaml)
+      if: github.event_name == 'pull_request'
+      run: |
+        version=${{ steps.get_version.outputs.version }}
+        vsix_file=$(find . -name "*.vsix")
+        pr_id=${{ github.event.number }}
+        new_name="BrightXaml_PR_${pr_id}.vsix"
+        mv "$vsix_file" "./$new_name"
+
+    - name: Upload VSIX artifact (BrightXaml)
+      uses: actions/upload-artifact@v3
+      with:
+        name: vsix-artifact
+        path: './BrightXaml_*.vsix'
