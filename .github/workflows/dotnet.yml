@@ -31,14 +31,6 @@ jobs:
     - name: Test
       run: dotnet test --no-build --configuration Release --verbosity normal      
 
-    - name: Copy VSIX files (BrightXaml)
-      run: |
-        $vsixFiles = Get-ChildItem -Path . -Filter 'BrightXaml*.vsix' -Recurse
-        foreach ($file in $vsixFiles) {
-          Copy-Item -Path $file.FullName -Destination 'artifacts/'
-        }
-      shell: pwsh
-
     - name: Upload VSIX artifact (BrightXaml)
       uses: actions/upload-artifact@v4
       with:
