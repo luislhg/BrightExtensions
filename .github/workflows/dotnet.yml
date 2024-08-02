@@ -33,10 +33,13 @@ jobs:
 
     - name: Copy VSIX files (BrightXaml)
       run: |
-        find . -name 'BrightXaml*.vsix' -exec cp {} artifacts/ \;
+        Get-ChildItem -Path . -Filter 'BrightXaml*.vsix' -Recurse | ForEach-Object {
+          Copy-Item -Path $_.FullName -Destination artifacts/
+        }
+      shell: pwsh
 
     - name: Upload VSIX artifact (BrightXaml)
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v3
       with:
         name: vsix-artifact
         path: artifacts/*.vsix
