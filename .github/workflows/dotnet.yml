@@ -40,20 +40,22 @@ jobs:
 
     - name: Rename VSIX file for push (BrightXaml)
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      shell: pwsh
       run: |
-        version=${{ steps.get_version.outputs.version }}
-        vsix_file=$(find . -name "*.vsix")
-        new_name="BrightXaml_$version.vsix"
-        mv "$vsix_file" "./$new_name"
+        $version = '${{ env.version }}'
+        $vsix_file = Get-ChildItem -Path . -Filter *.vsix
+        $new_name = "BrightXaml_$version.vsix"
+        Rename-Item -Path $vsix_file.FullName -NewName $new_name
 
     - name: Rename VSIX file for PR (BrightXaml)
       if: github.event_name == 'pull_request'
+      shell: pwsh
       run: |
-        version=${{ steps.get_version.outputs.version }}
-        vsix_file=$(find . -name "*.vsix")
-        pr_id=${{ github.event.number }}
-        new_name="BrightXaml_PR_${pr_id}.vsix"
-        mv "$vsix_file" "./$new_name"
+        $version = '${{ env.version }}'
+        $vsix_file = Get-ChildItem -Path . -Filter *.vsix
+        $pr_id = '${{ github.event.number }}'
+        $new_name = "BrightXaml_PR_${pr_id}.vsix"
+        Rename-Item -Path $vsix_file.FullName -NewName $new_name
 
     - name: Upload VSIX artifact (BrightXaml)
       uses: actions/upload-artifact@v3
