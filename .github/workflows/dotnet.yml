@@ -35,8 +35,8 @@ jobs:
       id: get_version
       shell: pwsh
       run: |
-        $version = Select-String -Path 'BrightXaml.Extensibility/BrightXaml.Extensibility.csproj' -Pattern '<Version>(.*?)</Version>' | ForEach-Object { $_.Matches[0].Groups[1].Value }
-        echo "##[set-output name=version;$version]"
+        $version = (Select-String -Path 'BrightXaml.Extensibility/BrightXaml.Extensibility.csproj' -Pattern '<Version>(.*?)</Version>').Matches[0].Groups[1].Value
+        echo "##vso[task.setvariable variable=version]$version"
 
     - name: Rename VSIX file for push (BrightXaml)
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
