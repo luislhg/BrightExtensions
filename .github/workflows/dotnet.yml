@@ -26,16 +26,15 @@ jobs:
       run: dotnet restore
       
     - name: Build
-      run: dotnet build --no-restore
+      run: dotnet build --no-restore --configuration Release
       
     - name: Test
       run: dotnet test --no-build --verbosity normal      
 
-    - name: Get version (BrightXaml)
+    - name: Get version
       id: get_version
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       run: |
-        version=$(cat BrightXaml.Extensibility.csproj | grep '<Version>' | sed -E 's/.*<Version>(.*)<\/Version>.*/\1/')
+        $version = Select-String -Path 'BrightXaml.Extensibility/BrightXaml.Extensibility.csproj' -Pattern '<Version>(.*?)</Version>' | ForEach-Object { $_.Matches[0].Groups[1].Value }
         echo "::set-output name=version::$version"
 
     - name: Rename VSIX file for push (BrightXaml)
