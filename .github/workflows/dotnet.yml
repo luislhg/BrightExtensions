@@ -26,7 +26,13 @@ jobs:
       run: dotnet restore
       
     - name: Build
-      run: dotnet build --no-restore
+      run: dotnet build --no-restore --configuration Release
       
     - name: Test
-      run: dotnet test --no-build --verbosity normal      
+      run: dotnet test --no-build --configuration Release --verbosity normal      
+
+    - name: Upload VSIX artifact (BrightXaml)
+      uses: actions/upload-artifact@v4
+      with:
+        name: vsix-artifact
+        path: '**/BrightXaml*.vsix'
