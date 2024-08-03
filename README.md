@@ -6,8 +6,7 @@ The suite includes two main projects at the moment: **BrightGit** and **BrightXa
 ---
 ## Projects
 
-### Bright Xaml
-_https://marketplace.visualstudio.com/items?itemName=luislhg.BrightXaml_
+### Bright Xaml 
 
 **BrightXaml** offers features specifically for C# XAML developers working with WPF, MAUI, and WinUI. It includes the following features:
 
@@ -47,7 +46,7 @@ _https://marketplace.visualstudio.com/items?itemName=luislhg.BrightXaml_
 - **Auto Apply EF Migrations**: Automatically detects and applies EF migrations _(if any)_ when changing branches.
 - **Auto Save/Restore Tabs**: Saves and restores all open tabs when switching branches, preserving the context of each branch/issue.
 
-## Releases
+## Download Extension
 
 **BrightXaml:** https://marketplace.visualstudio.com/items?itemName=luislhg.BrightXaml
 
@@ -121,4 +120,4 @@ This project is licensed under the MIT License. See the LICENSE file for details
 
 ### Contact
 
-For any questions or suggestions, please open an issue or contact luislhg (repository owner).
+For any questions or suggestions, please open an issue or contact the repository owner (luislhg).
