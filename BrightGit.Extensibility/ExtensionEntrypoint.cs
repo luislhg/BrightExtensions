@@ -55,10 +55,14 @@ internal class ExtensionEntrypoint : Extension
             MenuChild.Command<TabsRestoreCommand>(),
 #if DEBUG
             MenuChild.Separator,
+            MenuChild.Command<TabsSortCommand>(),
             MenuChild.Command<EFGitTest>(),
 #endif
             MenuChild.Separator,
             MenuChild.Command<SettingsWindowCommand>(),
+#if DEBUG
+            MenuChild.Command<TabsWindowCommand>(),
+#endif
             //MenuChild.Command<HelpWindowCommand>(),
         },
     };

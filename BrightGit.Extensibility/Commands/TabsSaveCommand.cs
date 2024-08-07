@@ -113,12 +113,8 @@ internal class TabsSaveCommand : Command
             {
                 // TODO: In the future use some faster way to close all documents (similar to VS -> "Close All Tabs").
 
-                var saveOption = SaveDocumentOption.PromptSave;
-                foreach (var document in openedDocuments)
-                {
-                    //await document.CloseAsync(saveOption, Extensibility, cancellationToken);
-                    await documents.CloseDocumentAsync(document.Moniker, saveOption, cancellationToken);
-                }
+                // Close all documents in parallel.
+                await Task.WhenAll(openedDocuments.Select(document => document.CloseAsync(SaveDocumentOption.PromptSave, Extensibility, cancellationToken)));
             }
 
             sw.Stop();

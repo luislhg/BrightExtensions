@@ -1,5 +1,6 @@
 ﻿namespace BrightGit.Extensibility.Windows;
 
+using BrightGit.Extensibility.Services;
 using Microsoft.VisualStudio.Extensibility.UI;
 
 /// <summary>
@@ -7,11 +8,13 @@ using Microsoft.VisualStudio.Extensibility.UI;
 /// </summary>
 internal class TabsWindowContent : RemoteUserControl
 {
+    public TabsWindowViewModel ViewModel => base.DataContext as TabsWindowViewModel;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="TabsWindowContent" /> class.
     /// </summary>
-    public TabsWindowContent()
-        : base(dataContext: new TabsWindowViewModel())
+    public TabsWindowContent(SettingsService settingsService)
+        : base(dataContext: new TabsWindowViewModel(settingsService))
     {
     }
 }

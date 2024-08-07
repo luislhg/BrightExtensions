@@ -76,9 +76,13 @@ internal class TabsRestoreCommand : Command
                 // Deserialize.
                 var tabsInfo = JsonSerializer.Deserialize<TabsInfo>(json);
 
+                // TODO: No longer intersecting because .xaml files (MAUI projet) are not being closed properly.
+                // We close via the API, VS closes it, but GetOpenDocuments is still listing it.
+
                 // Intersect opened documents with saved documents (spare processing time and inform the user about re-restoring something already opened).
-                var openedDocuments = await documents.GetOpenDocumentsAsync(cancellationToken);
-                var tabDocuments = tabsInfo.Tabs.Where(sd => !openedDocuments.Any(od => od.Moniker.LocalPath == sd.FilePath)).ToList();
+                //var openedDocuments = await documents.GetOpenDocumentsAsync(cancellationToken);
+                //var tabDocuments = tabsInfo.Tabs.Where(sd => !openedDocuments.Any(od => od.Moniker.LocalPath == sd.FilePath)).ToList();
+                var tabDocuments = tabsInfo.Tabs;
 
                 // Check if there are any documents to restore.
                 if (tabDocuments.Count == 0)
@@ -88,12 +92,10 @@ internal class TabsRestoreCommand : Command
                 }
 
                 // TODO: In the future find some way to open documents faster, without activating/viewing one by one.
+
                 // Open documents.
                 var openDocumentOptions = new OpenDocumentOptions(activate: false);
-                foreach (var document in tabDocuments)
-                {
-                    await documents.OpenDocumentAsync(new Uri(document.FilePath), openDocumentOptions, cancellationToken);
-                }
+                await Task.WhenAll(tabDocuments.Select(document => Extensibility.Documents().OpenDocumentAsync(new Uri(document.FilePath), openDocumentOptions, cancellationToken)));
 
                 // TODO: We need some way to pin documents again (once we figure out how to do it).
 

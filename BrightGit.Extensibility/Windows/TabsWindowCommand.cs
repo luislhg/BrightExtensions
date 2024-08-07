@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 public class TabsWindowCommand : Command
 {
     /// <inheritdoc />
-    public override CommandConfiguration CommandConfiguration => new(displayName: "Show Tool Window")
+    public override CommandConfiguration CommandConfiguration => new(displayName: "Tab Manager")
     {
         //Placements = [CommandPlacement.KnownPlacements.ExtensionsMenu],
         Icon = new(ImageMoniker.KnownValues.ProcedureSettings, IconSettings.IconAndText),

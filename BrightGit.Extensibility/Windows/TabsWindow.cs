@@ -1,5 +1,6 @@
 ﻿namespace BrightGit.Extensibility.Windows;
 
+using BrightGit.Extensibility.Services;
 using Microsoft.VisualStudio.Extensibility;
 using Microsoft.VisualStudio.Extensibility.ToolWindows;
 using Microsoft.VisualStudio.RpcContracts.RemoteUI;
@@ -12,14 +13,16 @@ using System.Threading.Tasks;
 [VisualStudioContribution]
 public class TabsWindow : ToolWindow
 {
-    private readonly TabsWindowContent content = new();
+    private readonly TabsWindowContent content;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TabsWindow" /> class.
     /// </summary>
-    public TabsWindow()
+    public TabsWindow(SettingsService settingsService)
     {
-        this.Title = "My Tool Window";
+        this.Title = "Bright Git - Tabs";
+        this.content = new TabsWindowContent(settingsService);
+        content.ViewModel.CloseWindow = (cancellationToken) => { _ = HideAsync(cancellationToken); };
     }
 
     /// <inheritdoc />
