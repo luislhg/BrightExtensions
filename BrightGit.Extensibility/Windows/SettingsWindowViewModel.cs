@@ -22,6 +22,9 @@ internal class SettingsWindowViewModel : NotifyPropertyChangedObject
     [DataMember]
     public AsyncCommand CancelCommand { get; }
 
+    [DataMember]
+    public string Version { get; } = Meta.Version.ToString();
+
     public SettingsWindowViewModel(SettingsService settingsService)
     {
         SettingsService = settingsService;

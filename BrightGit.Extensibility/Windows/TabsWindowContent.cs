@@ -13,8 +13,8 @@ internal class TabsWindowContent : RemoteUserControl
     /// <summary>
     /// Initializes a new instance of the <see cref="TabsWindowContent" /> class.
     /// </summary>
-    public TabsWindowContent(SettingsService settingsService)
-        : base(dataContext: new TabsWindowViewModel(settingsService))
+    public TabsWindowContent(TabsStorageService tabsStorageService)
+        : base(dataContext: new TabsWindowViewModel(tabsStorageService))
     {
     }
 }

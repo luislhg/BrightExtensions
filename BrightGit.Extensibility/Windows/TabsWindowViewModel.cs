@@ -1,9 +1,7 @@
 ﻿namespace BrightGit.Extensibility.Windows;
 
-using BrightGit.Extensibility.Models;
 using BrightGit.Extensibility.Services;
 using Microsoft.VisualStudio.Extensibility.UI;
-using System.Collections.ObjectModel;
 using System.Runtime.Serialization;
 using System.Text.Json;
 
@@ -13,14 +11,8 @@ internal class TabsWindowViewModel : NotifyPropertyChangedObject
     public Action<CancellationToken> CloseWindow { get; set; }
 
     [DataMember]
-    public ObservableCollection<TabsInfo> SavedTabs { get => savedTabs; set => SetProperty(ref savedTabs, value); }
-    private ObservableCollection<TabsInfo> savedTabs;
-
-    public SettingsService SettingsService { get; }
-
-    [DataMember]
-    public SettingsData SettingsData { get => settingsData; private set => SetProperty(ref settingsData, value); }
-    private SettingsData settingsData;
+    public TabsStorageData TabsStorageData { get => tabsStorageData; private set => SetProperty(ref tabsStorageData, value); }
+    private TabsStorageData tabsStorageData;
 
     [DataMember]
     public AsyncCommand OKCommand { get; }
@@ -28,15 +20,19 @@ internal class TabsWindowViewModel : NotifyPropertyChangedObject
     [DataMember]
     public AsyncCommand CancelCommand { get; }
 
-    public TabsWindowViewModel(SettingsService settingsService)
+    [DataMember]
+    public string Version { get; } = Meta.Version.ToString();
+
+    private readonly TabsStorageService tabsStorageService;
+
+    public TabsWindowViewModel(TabsStorageService tabsStorageService)
     {
-        SettingsService = settingsService;
-        SettingsData = CloneSettings(settingsService.Data);
+        TabsStorageData = CloneTabsStorage(tabsStorageService.Data);
 
         OKCommand = new AsyncCommand((parameter, clientContext, cancellationToken) =>
         {
-            // Save settings.
-            SaveSettings();
+            // Save TabsStorage.
+            SaveTabsStorage();
 
             // Close window.
             CloseWindow?.Invoke(cancellationToken);
@@ -44,23 +40,25 @@ internal class TabsWindowViewModel : NotifyPropertyChangedObject
         });
         CancelCommand = new AsyncCommand((parameter, clientContext, cancellationToken) =>
         {
-            // Reset settings.
-            SettingsData = CloneSettings(settingsService.Data);
+            // Reset TabsStorage.
+            TabsStorageData = CloneTabsStorage(tabsStorageService.Data);
 
             // Close window.
             CloseWindow?.Invoke(cancellationToken);
             return Task.CompletedTask;
         });
+
+        this.tabsStorageService = tabsStorageService;
     }
 
-    public void SaveSettings()
+    public void SaveTabsStorage()
     {
-        SettingsService.Data = SettingsData;
-        SettingsService.Save();
+        tabsStorageService.Data = TabsStorageData;
+        tabsStorageService.Save();
     }
 
-    public SettingsData CloneSettings(SettingsData data)
+    public TabsStorageData CloneTabsStorage(TabsStorageData data)
     {
-        return JsonSerializer.Deserialize<SettingsData>(JsonSerializer.Serialize(data));
+        return JsonSerializer.Deserialize<TabsStorageData>(JsonSerializer.Serialize(data));
     }
 }

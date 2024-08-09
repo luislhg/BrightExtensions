@@ -1,14 +1,13 @@
 ﻿namespace BrightGit.Extensibility.Commands;
 
 using BrightGit.Extensibility.Helpers;
-using BrightGit.Extensibility.Models;
+using BrightGit.Extensibility.Services;
 using Microsoft;
 using Microsoft.VisualStudio.Extensibility;
 using Microsoft.VisualStudio.Extensibility.Commands;
 using Microsoft.VisualStudio.Extensibility.Shell;
 using Microsoft.VisualStudio.RpcContracts.OpenDocument;
 using System.Diagnostics;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -16,10 +15,12 @@ using System.Threading.Tasks;
 internal class TabsRestoreCommand : Command
 {
     private readonly TraceSource logger;
+    private readonly TabsStorageService tabsStorageService;
 
-    public TabsRestoreCommand(TraceSource traceSource)
+    public TabsRestoreCommand(TraceSource traceSource, TabsStorageService tabsStorageService)
     {
         this.logger = Requires.NotNull(traceSource, nameof(traceSource));
+        this.tabsStorageService = tabsStorageService;
     }
 
     /// <inheritdoc />
@@ -67,14 +68,13 @@ internal class TabsRestoreCommand : Command
 
             // Read from disk.
             string tabsSaveKey = $"TabsCustom_{solutionName}{gitBranchName}";
-            var json = await configuration.GetPersistedStateAsync(tabsSaveKey, string.Empty, cancellationToken);
-            Debug.WriteLine(json);
+            Debug.WriteLine(tabsSaveKey);
 
             // Check if there are any tabs to restore.
-            if (!string.IsNullOrEmpty(json))
+            if (!string.IsNullOrEmpty(tabsSaveKey))
             {
                 // Deserialize.
-                var tabsInfo = JsonSerializer.Deserialize<TabsInfo>(json);
+                var tabsInfo = tabsStorageService.Data.TabsCustom.FirstOrDefault(t => t.Id == tabsSaveKey);
 
                 // TODO: No longer intersecting because .xaml files (MAUI projet) are not being closed properly.
                 // We close via the API, VS closes it, but GetOpenDocuments is still listing it.

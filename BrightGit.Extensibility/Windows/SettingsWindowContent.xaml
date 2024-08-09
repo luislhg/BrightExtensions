@@ -70,6 +70,10 @@
         </StackPanel>
 
         <!--Dev Info-->
-        <TextBlock Text="Developed by Luis Goll (luislhg)" Grid.Row="2" Grid.ColumnSpan="2" HorizontalAlignment="Right" Margin="5"/>
+        <TextBlock FontSize="11" Grid.Row="2" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="5">
+            <Run Text="Version:"/>
+            <Run Text="{Binding Version}"/>
+        </TextBlock>
+        <TextBlock Text="Developed by Luis Goll (luislhg)" FontSize="12" Grid.Row="2" Grid.ColumnSpan="2" HorizontalAlignment="Right" Margin="5"/>
     </Grid>
 </DataTemplate>

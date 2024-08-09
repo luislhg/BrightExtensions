@@ -16,12 +16,4 @@ public class SettingsTabsData : ObservableObject
     [DataMember]
     public bool CloseTabsOnBranchChange { get => closeTabsOnBranchChange; set => SetProperty(ref closeTabsOnBranchChange, value); }
     private bool closeTabsOnBranchChange = true;
-
-    //[DataMember]
-    //public List<TabsInfo> TabsBranch { get => tabsBranch; set => SetProperty(ref tabsBranch, value); }
-    //private List<TabsInfo> tabsBranch;
-
-    //[DataMember]
-    //public List<TabsInfo> TabsCustom { get => tabsCustom; set => SetProperty(ref tabsCustom, value); }
-    //private List<TabsInfo> tabsCustom;
 }

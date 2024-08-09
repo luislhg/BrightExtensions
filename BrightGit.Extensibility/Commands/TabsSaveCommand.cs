@@ -9,7 +9,6 @@ using Microsoft.VisualStudio.Extensibility.Commands;
 using Microsoft.VisualStudio.Extensibility.Shell;
 using Microsoft.VisualStudio.RpcContracts.Documents;
 using System.Diagnostics;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -18,11 +17,13 @@ internal class TabsSaveCommand : Command
 {
     private readonly TraceSource logger;
     private readonly SettingsService settingsService;
+    private readonly TabsStorageService tabsStorageService;
 
-    public TabsSaveCommand(TraceSource traceSource, SettingsService settingsService)
+    public TabsSaveCommand(TraceSource traceSource, SettingsService settingsService, TabsStorageService tabsStorageService)
     {
         this.logger = Requires.NotNull(traceSource, nameof(traceSource));
         this.settingsService = settingsService;
+        this.tabsStorageService = tabsStorageService;
     }
 
     /// <inheritdoc />
@@ -86,15 +87,15 @@ internal class TabsSaveCommand : Command
             string gitBranchName = string.Empty;
             if (File.Exists(gitHeadPath))
             {
-                gitBranchName = File.ReadAllText(gitHeadPath).Split('/').LastOrDefault();
+                gitBranchName = File.ReadAllText(gitHeadPath).Split('/').LastOrDefault().TrimEnd('\n');
                 gitBranchName = $"_{gitBranchName}";
             }
 
-            // Serialize to json.
+            // Save to disk.
             TabsInfo tabsInfo = new()
             {
-                Id = $"TabsCustom_{solutionName}{gitBranchName}",
-                Name = $"TabsCustom_{solutionName}{gitBranchName}",
+                Id = $"{solutionName}{gitBranchName}",
+                Name = $"{solutionName}{gitBranchName}",
                 SolutionName = solutionName,
                 BranchName = gitBranchName,
                 DateSaved = DateTime.Now,
@@ -102,11 +103,8 @@ internal class TabsSaveCommand : Command
                                       .Select((d, i) => new TabDocumentInfo() { FilePath = d.Moniker.LocalPath, Index = i, IsPinned = false })
                                       .ToList()
             };
-            var json = JsonSerializer.Serialize(tabsInfo);
-
-            // Save to disk.
-            await configuration.WritePersistedStateAsync(tabsInfo.Id, json, cancellationToken);
-            Debug.WriteLine(json);
+            tabsStorageService.AddTabsCustom(tabsInfo);
+            tabsStorageService.Save();
 
             // Close all documents.
             if (settingsService.Data.Tabs.CloseTabsOnSave)

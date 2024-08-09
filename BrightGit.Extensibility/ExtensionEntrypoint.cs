@@ -32,6 +32,7 @@ internal class ExtensionEntrypoint : Extension
         // You can configure dependency injection here by adding services to the serviceCollection.
         serviceCollection.AddTransient<IDialogService>(provider => new DialogService());
         serviceCollection.AddSingleton<SettingsService>();
+        serviceCollection.AddSingleton<TabsStorageService>();
     }
 
     [VisualStudioContribution]

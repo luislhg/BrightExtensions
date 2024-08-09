@@ -4,16 +4,16 @@ using System.Text.Json;
 namespace BrightGit.Extensibility.Services;
 public class SettingsService
 {
-    private const string settingsFileName = "BrightGitSettings.json";
-    private readonly string settingsDirectory;
-    private readonly string settingsFilePath;
+    private const string fileName = "BrightGitSettings.json";
+    private readonly string directory;
+    private readonly string filePath;
 
     public SettingsData Data { get; set; } = new();
 
     public SettingsService()
     {
-        settingsDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "BrightExtensions");
-        settingsFilePath = Path.Combine(settingsDirectory, settingsFileName);
+        directory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "BrightExtensions");
+        filePath = Path.Combine(directory, fileName);
         Load();
     }
 
@@ -22,13 +22,13 @@ public class SettingsService
         try
         {
             // Check if directory exists.
-            if (!Directory.Exists(settingsDirectory))
-                Directory.CreateDirectory(settingsDirectory);
+            if (!Directory.Exists(directory))
+                Directory.CreateDirectory(directory);
 
             // Load settings.
-            if (File.Exists(settingsFilePath))
+            if (File.Exists(filePath))
             {
-                var json = File.ReadAllText(settingsFilePath);
+                var json = File.ReadAllText(filePath);
                 Data = JsonSerializer.Deserialize<SettingsData>(json) ?? new SettingsData();
             }
         }
@@ -46,7 +46,7 @@ public class SettingsService
         try
         {
             var json = JsonSerializer.Serialize(Data, new JsonSerializerOptions { WriteIndented = true });
-            File.WriteAllText(settingsFilePath, json);
+            File.WriteAllText(filePath, json);
         }
         catch (Exception ex)
         {

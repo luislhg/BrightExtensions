@@ -18,10 +18,10 @@ public class TabsWindow : ToolWindow
     /// <summary>
     /// Initializes a new instance of the <see cref="TabsWindow" /> class.
     /// </summary>
-    public TabsWindow(SettingsService settingsService)
+    public TabsWindow(TabsStorageService tabsStorageService)
     {
         this.Title = "Bright Git - Tabs";
-        this.content = new TabsWindowContent(settingsService);
+        this.content = new TabsWindowContent(tabsStorageService);
         content.ViewModel.CloseWindow = (cancellationToken) => { _ = HideAsync(cancellationToken); };
     }
 
