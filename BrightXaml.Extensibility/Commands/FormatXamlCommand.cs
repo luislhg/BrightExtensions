@@ -1,5 +1,6 @@
 ﻿namespace BrightXaml.Extensibility.Commands;
 
+using BrightXaml.Extensibility.Services;
 using BrightXaml.Extensibility.Utilities;
 using Microsoft;
 using Microsoft.VisualStudio.Extensibility;
@@ -13,10 +14,12 @@ using System.Threading.Tasks;
 internal class FormatXamlCommand : Command
 {
     private readonly TraceSource logger;
+    private readonly SettingsService settingsService;
 
-    public FormatXamlCommand(TraceSource traceSource)
+    public FormatXamlCommand(TraceSource traceSource, SettingsService settingsService)
     {
         logger = Requires.NotNull(traceSource, nameof(traceSource));
+        this.settingsService = settingsService;
     }
 
     /// <inheritdoc />
@@ -26,6 +29,7 @@ internal class FormatXamlCommand : Command
         Icon = new(ImageMoniker.KnownValues.FormatDocument, IconSettings.IconAndText),
         Shortcuts = [new CommandShortcutConfiguration(ModifierKey.Control, Key.E, ModifierKey.Control, Key.F)],
         EnabledWhen = ActivationConstraint.ClientContext(ClientContextKey.Shell.ActiveEditorFileName, @"\.(xaml)$"),
+        TooltipText = "Formats a XAML file",
     };
 
     /// <inheritdoc />
@@ -55,7 +59,9 @@ internal class FormatXamlCommand : Command
             try
             {
                 // Format XAML.
-                var formattedXaml = XamlFormatter.FormatXaml(textContent);
+                var formattedXaml = XamlFormatter.FormatXaml(textContent,
+                                                             settingsService.Data.FormatXaml.EndingTagSpaces,
+                                                             settingsService.Data.FormatXaml.ClosingTagSpaces);
 
                 // Apply formatted XAML to the active document.
                 await editor.EditAsync(

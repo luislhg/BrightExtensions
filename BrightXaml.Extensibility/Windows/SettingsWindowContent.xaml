@@ -11,6 +11,8 @@
             <Style TargetType="TextBox" BasedOn="{StaticResource {x:Static styles:VsResourceKeys.TextBoxStyleKey}}">
                 <Setter Property="MinWidth" Value="100"/>
             </Style>
+            <Style TargetType="ComboBox" BasedOn="{StaticResource {x:Static styles:VsResourceKeys.ComboBoxStyleKey}}" />
+            <Style TargetType="ComboBoxItem" BasedOn="{StaticResource {x:Static styles:VsResourceKeys.ComboBoxItemStyleKey}}" />
             <Style TargetType="Button" BasedOn="{StaticResource {x:Static styles:VsResourceKeys.ButtonStyleKey}}" />
             <Style TargetType="CheckBox" BasedOn="{StaticResource {x:Static styles:VsResourceKeys.CheckBoxStyleKey}}">
                 <Setter Property="Margin" Value="4" />
@@ -46,6 +48,10 @@
                             <CheckBox IsChecked="{Binding SettingsData.PropInpc.AddFieldUnderscore}"/>
                             <TextBlock Text="Add underscore to field"/>
                         </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,5">
+                            <TextBlock Text="Default Set method name: "/>
+                            <TextBox Text="{Binding SettingsData.PropInpc.SetMethodName, UpdateSourceTrigger=PropertyChanged}" MaxLength="32"/>
+                        </StackPanel>
 
                         <!--Preview-->
                         <TextBlock Text="Preview" FontStyle="Italic" Margin="4"/>
@@ -69,19 +75,33 @@
                 </GroupBox>
 
                 <!-- Format XAML -->
-                <Separator Margin="10" Visibility="Collapsed"/>
-                <GroupBox Visibility="Collapsed">
+                <Separator Margin="10"/>
+                <GroupBox>
                     <GroupBox.Header>
                         <TextBlock Text="Format XAML" FontWeight="Bold" />
                     </GroupBox.Header>
                     <StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,5">
-                            <TextBlock Text="Closing tag spaces:"/>
-                            <TextBox Text="{Binding SettingsData.FormatXaml.ClosingTagSpaces}" Margin="4"/>
+                            <TextBlock Text="Ending tag spaces   (>):"/>
+                            <ComboBox SelectedValue="{Binding SettingsData.FormatXaml.EndingTagSpaces, Mode=TwoWay}"
+                                      ItemsSource="{Binding TagSpacesOptions}"
+                                      SelectedValuePath="Id"
+                                      DisplayMemberPath="Text"
+                                      Margin="4" Width="200"/>
                         </StackPanel>
+                        
                         <StackPanel Orientation="Horizontal" Margin="0,5">
-                            <TextBlock Text="Remove Empty Lines:"/>
+                            <TextBlock Text="Closing tag spaces (/>):"/>
+                            <ComboBox SelectedValue="{Binding SettingsData.FormatXaml.ClosingTagSpaces, Mode=TwoWay}"
+                                      ItemsSource="{Binding TagSpacesOptions}"
+                                      SelectedValuePath="Id"
+                                      DisplayMemberPath="Text"
+                                      Margin="4" Width="200"/>
+                        </StackPanel>
+                        
+                        <StackPanel Orientation="Horizontal" Margin="0,5" Visibility="Collapsed">
                             <CheckBox IsChecked="{Binding SettingsData.FormatXaml.RemoveEmptyLines}"/>
+                            <TextBlock Text="Remove Empty Lines"/>
                         </StackPanel>
                     </StackPanel>
                 </GroupBox>
@@ -95,6 +115,10 @@
         </StackPanel>
 
         <!--Dev Info-->
-        <TextBlock Text="Developed by Luis Goll (luislhg)" Grid.Row="2" Grid.ColumnSpan="2" HorizontalAlignment="Right" Margin="5"/>
+        <TextBlock FontSize="11" Grid.Row="2" Grid.ColumnSpan="2" HorizontalAlignment="Left" Margin="5">
+            <Run Text="Version:"/>
+            <Run Text="{Binding Version}"/>
+        </TextBlock>
+        <TextBlock Text="Developed by Luis Goll (luislhg)" FontSize="12" Grid.Row="2" Grid.ColumnSpan="2" HorizontalAlignment="Right" Margin="5"/>
     </Grid>
 </DataTemplate>

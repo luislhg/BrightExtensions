@@ -2,26 +2,27 @@
 using System.Text.RegularExpressions;
 
 namespace BrightXaml.Extensibility.Utilities;
-public static class XamlFormatter
+public static partial class XamlFormatter
 {
-    public static async Task FormatFileAsync(string filePath, CancellationToken cancellationToken)
+    public static async Task FormatFileAsync(string filePath, CancellationToken cancellationToken, int endingTagSpaces, int closingTagSpaces)
     {
         // Read the file content.
         var textContent = await File.ReadAllTextAsync(filePath, Encoding.UTF8, cancellationToken);
 
         // Format XAML.
-        var formattedXaml = FormatXaml(textContent);
+        var formattedXaml = FormatXaml(textContent, endingTagSpaces, closingTagSpaces);
 
         // Apply formatted XAML to the file.
         await File.WriteAllTextAsync(filePath, formattedXaml, Encoding.UTF8, cancellationToken);
     }
 
-    public static string FormatXaml(string xaml)
+    public static string FormatXaml(string xaml, int endingTagSpaces, int closingTagSpaces)
     {
         var formatted = new List<string>();
 
         const int indentSize = 4;
         bool useWindowsLineEnding = xaml.Contains("\r\n");
+        //string xaml = SplitTagsPerLine(xaml);
         var lines = SplitLines(xaml);
         int indentLevel = 0;
         bool isInsideComment = false;
@@ -147,9 +148,9 @@ public static class XamlFormatter
         return string.Join(Environment.NewLine, formatted);
     }
 
-    // Input:  "<MyValue Text=\"ahaha\"     Color=\"asd\">
-    // Output: "<MyValue Text=\"ahaha\" Color=\"asd\">"
-    public static string RemoveExtraSpacesBetweenAttributesLine(string xml)
+    // Input:  <MyValue Text=\"ahaha\"     Color=\"asd\">
+    // Output: <MyValue Text=\"ahaha\" Color=\"asd\">
+    public static string RemoveExtraSpacesBetweenAttributesLine(string xml, int endingTagSpaces = -1, int closingTagSpaces = -1)
     {
         // Return the input if it's null or empty.
         if (string.IsNullOrWhiteSpace(xml))
@@ -184,7 +185,18 @@ public static class XamlFormatter
             var text = attributes[i];
             if (i % 2 == 0)
             {
-                newContent.Append(Regex.Replace(text, @"\s+", " "));
+                if (text.TrimEnd().EndsWith("/>") && closingTagSpaces >= 0)
+                {
+                    newContent.Append(SpacesRegex().Replace(" " + text, new string(' ', closingTagSpaces)));
+                }
+                else if (text.TrimEnd().EndsWith(">") && !text.TrimEnd().EndsWith("/>") && endingTagSpaces >= 0)
+                {
+                    newContent.Append(SpacesRegex().Replace(" " + text, new string(' ', endingTagSpaces)));
+                }
+                else
+                {
+                    newContent.Append(SpacesRegex().Replace(text, " "));
+                }
             }
             else
             {
@@ -200,6 +212,38 @@ public static class XamlFormatter
         return prefix + newContent.ToString();
     }
 
+    public static string SplitTagsPerLine(string xaml)
+    {
+        var formatted = new List<string>();
+
+        var lines = SplitLines(xaml);
+        for (int i = 0; i < lines.Length; i++)
+        {
+            string line = lines[i];
+
+            // Check if the line contains multiple /> or </.
+            var split = line.Split(new string[] { "/>", "</" }, StringSplitOptions.RemoveEmptyEntries);
+            if (split.Length > 1)
+            {
+                var firstIndex = line.IndexOf("/>");
+                var secondIndex = line.IndexOf("</");
+                var indexOf = firstIndex < secondIndex ? firstIndex : secondIndex;
+
+                // Add the first part of the split line.
+                formatted.Add(line.Substring(0, indexOf + 2));
+
+                // Add the rest to the next line.
+                formatted.Add(line.Substring(indexOf + 2).Trim());
+            }
+            else
+            {
+                formatted.Add(line);
+            }
+        }
+
+        return string.Join(Environment.NewLine, formatted);
+    }
+
     public static string[] SplitLines(string input)
     {
         // Regular expression to split by '\r\n', '\r', or '\n'.
@@ -208,4 +252,7 @@ public static class XamlFormatter
         // Split the input string and return the array of lines.
         return regex.Split(input);
     }
+
+    [GeneratedRegex(@"\s+")]
+    private static partial Regex SpacesRegex();
 }

@@ -1,5 +1,6 @@
 ﻿namespace BrightXaml.Extensibility.Windows;
 
+using BrightXaml.Extensibility.Models;
 using BrightXaml.Extensibility.Services;
 using BrightXaml.Extensibility.Utilities;
 using Microsoft.VisualStudio.Extensibility.UI;
@@ -26,15 +27,28 @@ internal class SettingsWindowViewModel : NotifyPropertyChangedObject
     private string previewInpcOutput;
 
     [DataMember]
+    public List<ComboIntData> TagSpacesOptions { get => tagSpacesOptions; set => SetProperty(ref tagSpacesOptions, value); }
+    private List<ComboIntData> tagSpacesOptions;
+
+    [DataMember]
     public AsyncCommand OKCommand { get; }
 
     [DataMember]
     public AsyncCommand CancelCommand { get; }
 
+    [DataMember]
+    public string Version { get; } = Meta.Version.ToString();
+
     public SettingsWindowViewModel(SettingsService settingsService)
     {
         SettingsService = settingsService;
         SettingsData = CloneSettings(settingsService.Data);
+
+        TagSpacesOptions = new List<ComboIntData>() {
+            new (){ Id = -1, Text = "Preserve spaces (0 or 1)" },
+            new (){ Id = 0, Text = "Always 0 spaces" },
+            new (){ Id = 1, Text = "Always 1 space" },
+        };
 
         OKCommand = new AsyncCommand((parameter, clientContext, cancellationToken) =>
         {
@@ -57,7 +71,7 @@ internal class SettingsWindowViewModel : NotifyPropertyChangedObject
         });
 
         // Initialize preview data.
-        PreviewInpcInput = "public string Name { get; set; }";
+        PreviewInpcInput = "public int Age { get; set; }";
         CalculatePreviewInpc();
 
         // Subscribe to property changes.
@@ -68,7 +82,8 @@ internal class SettingsWindowViewModel : NotifyPropertyChangedObject
     private void SettingsWindowViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(SettingsData.PropInpc.AddFieldAbove) ||
-            e.PropertyName == nameof(SettingsData.PropInpc.AddFieldUnderscore))
+            e.PropertyName == nameof(SettingsData.PropInpc.AddFieldUnderscore) ||
+            e.PropertyName == nameof(SettingsData.PropInpc.SetMethodName))
         {
             CalculatePreviewInpc();
         }
@@ -77,7 +92,11 @@ internal class SettingsWindowViewModel : NotifyPropertyChangedObject
     private void CalculatePreviewInpc()
     {
         var propData = PropToInpcHelper.GetPropertyLineData(PreviewInpcInput);
-        PreviewInpcOutput = PropToInpcHelper.GenerateInpcPropertySet(propData, SettingsData.PropInpc.AddFieldAbove, SettingsData.PropInpc.AddFieldUnderscore, true, null);
+        PreviewInpcOutput = PropToInpcHelper.GenerateInpcPropertySet(propData,
+                                                                     SettingsData.PropInpc.AddFieldAbove,
+                                                                     SettingsData.PropInpc.AddFieldUnderscore,
+                                                                     true,
+                                                                     SettingsData.PropInpc.SetMethodName);
     }
 
     public void SaveSettings()

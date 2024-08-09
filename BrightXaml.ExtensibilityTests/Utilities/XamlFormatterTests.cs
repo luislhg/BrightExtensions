@@ -20,7 +20,7 @@ public class XamlFormatterTests
         // Replace tabs with spaces.
         expected = expected.Replace("\t", "    ");
 
-        string actual = XamlFormatter.FormatXaml(input);
+        string actual = XamlFormatter.FormatXaml(input, -1, -1);
         TestHelper.WriteTestResultToFile(actual);
 
         Assert.AreEqual(expected, actual);
@@ -33,6 +33,8 @@ public class XamlFormatterTests
     [DataRow("Resources.MultipleLine04_Bad.xml", "Resources.MultipleLine04_Good.xml")]
     [DataRow("Resources.MultipleLine05_Bad.xml", "Resources.MultipleLine05_Good.xml")]
     [DataRow("Resources.MultipleLine06_Bad.xml", "Resources.MultipleLine06_Good.xml")]
+    //[DataRow("Resources.MultipleLine07_Bad.xml", "Resources.MultipleLine07_Good.xml")]
+    //[DataRow("Resources.MultipleLine08_Bad.xml", "Resources.MultipleLine08_Good.xml")]
     public void FormatXaml_MultipleLine(string fileBad, string fileGood)
     {
         var input = TestHelper.ReadResource(fileBad);
@@ -41,7 +43,7 @@ public class XamlFormatterTests
         // Replace tabs with spaces.
         expected = expected.Replace("\t", "    ");
 
-        string actual = XamlFormatter.FormatXaml(input);
+        string actual = XamlFormatter.FormatXaml(input, -1, -1);
         TestHelper.WriteTestResultToFile(actual);
 
         Assert.AreEqual(expected, actual);
@@ -64,7 +66,7 @@ public class XamlFormatterTests
         var sw = Stopwatch.StartNew();
 
         // Act.
-        string actual = XamlFormatter.FormatXaml(input);
+        string actual = XamlFormatter.FormatXaml(input, -1, -1);
 
         sw.Stop();
         Debug.WriteLine($"FormatXaml_FullDocument: {sw.ElapsedMilliseconds}ms");
@@ -106,6 +108,58 @@ public class XamlFormatterTests
     public void RemoveExtraSpacesBetweenAttributesLine_Manual(string input, string expected)
     {
         var actual = XamlFormatter.RemoveExtraSpacesBetweenAttributesLine(input);
+        Assert.AreEqual(expected, actual);
+    }
+
+    [TestMethod()]
+    [DataRow(" Value=\"Black\" />", " Value=\"Black\" />", -1)]
+    [DataRow(" Value=\"Black\"/>", " Value=\"Black\"/>", -1)]
+    [DataRow(" Value=\"Black\"          />", " Value=\"Black\" />", -1)]
+    [DataRow(" Value=\"Black\" />", " Value=\"Black\"/>", 0)]
+    [DataRow(" Value=\"Black\"/>", " Value=\"Black\"/>", 0)]
+    [DataRow(" Value=\"Black\"          />", " Value=\"Black\"/>", 0)]
+    [DataRow(" Value=\"Black\" />", " Value=\"Black\" />", 1)]
+    [DataRow(" Value=\"Black\"/>", " Value=\"Black\" />", 1)]
+    [DataRow(" Value=\"Black\"          />", " Value=\"Black\" />", 1)]
+    public void RemoveExtraSpacesBetweenAttributesLine_ClosingTagSpaces(string input, string expected, int closingTagSpaces)
+    {
+        var actual = XamlFormatter.RemoveExtraSpacesBetweenAttributesLine(input, closingTagSpaces: closingTagSpaces);
+        Assert.AreEqual(expected, actual);
+    }
+
+    [TestMethod()]
+    [DataRow(" Value=\"Black\" >", " Value=\"Black\" >", -1)]
+    [DataRow(" Value=\"Black\">", " Value=\"Black\">", -1)]
+    [DataRow(" Value=\"Black\"          >", " Value=\"Black\" >", -1)]
+    [DataRow(" Value=\"Black\" >", " Value=\"Black\">", 0)]
+    [DataRow(" Value=\"Black\">", " Value=\"Black\">", 0)]
+    [DataRow(" Value=\"Black\"          >", " Value=\"Black\">", 0)]
+    [DataRow(" Value=\"Black\" >", " Value=\"Black\" >", 1)]
+    [DataRow(" Value=\"Black\">", " Value=\"Black\" >", 1)]
+    [DataRow(" Value=\"Black\"          >", " Value=\"Black\" >", 1)]
+    public void RemoveExtraSpacesBetweenAttributesLine_EndTagSpaces(string input, string expected, int endingTagSpaces)
+    {
+        var actual = XamlFormatter.RemoveExtraSpacesBetweenAttributesLine(input, endingTagSpaces: endingTagSpaces);
+        Assert.AreEqual(expected, actual);
+    }
+
+    [TestMethod()]
+    [DataRow("Resources.SplitTagsPerLine01_Bad.xml", "Resources.SplitTagsPerLine01_Good.xml")]
+    [DataRow("Resources.SplitTagsPerLine02_Bad.xml", "Resources.SplitTagsPerLine02_Good.xml")]
+    public void SplitTagsPerLineTest(string fileBad, string fileGood)
+    {
+        // Arrange.
+        var input = TestHelper.ReadResource(fileBad);
+        var expected = TestHelper.ReadResource(fileGood);
+
+        // Replace tabs with spaces.
+        expected = expected.Replace("\t", "    ");
+
+        // Act.
+        var actual = XamlFormatter.SplitTagsPerLine(input);
+
+        // Assert.
+        TestHelper.WriteTestResultToFile(actual);
         Assert.AreEqual(expected, actual);
     }
 }

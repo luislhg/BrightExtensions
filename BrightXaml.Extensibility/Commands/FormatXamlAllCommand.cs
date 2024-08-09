@@ -15,11 +15,13 @@ internal class FormatXamlAllCommand : Command
 {
     private readonly TraceSource logger;
     private readonly IDialogService dialogService;
+    private readonly SettingsService settingsService;
 
-    public FormatXamlAllCommand(TraceSource traceSource, IDialogService dialogService)
+    public FormatXamlAllCommand(TraceSource traceSource, IDialogService dialogService, SettingsService settingsService)
     {
         logger = Requires.NotNull(traceSource, nameof(traceSource));
         this.dialogService = dialogService;
+        this.settingsService = settingsService;
         this.dialogService.Shell = Extensibility.Shell();
     }
 
@@ -28,8 +30,8 @@ internal class FormatXamlAllCommand : Command
     {
         //Placements = [CommandPlacement.KnownPlacements.ExtensionsMenu],
         Icon = new(ImageMoniker.KnownValues.FormatDocument, IconSettings.IconAndText),
-        Shortcuts = [new CommandShortcutConfiguration(ModifierKey.Control, Key.E, ModifierKey.Control, Key.F)],
         EnabledWhen = ActivationConstraint.ClientContext(ClientContextKey.Shell.ActiveSelectionPath, ".+"),
+        TooltipText = "Formats multiple XAML files",
     };
 
     /// <inheritdoc />
@@ -101,7 +103,10 @@ internal class FormatXamlAllCommand : Command
         {
             try
             {
-                await XamlFormatter.FormatFileAsync(file, cancellationToken);
+                await XamlFormatter.FormatFileAsync(file,
+                                                    cancellationToken,
+                                                    settingsService.Data.FormatXaml.EndingTagSpaces,
+                                                    settingsService.Data.FormatXaml.ClosingTagSpaces);
             }
             catch (Exception ex)
             {

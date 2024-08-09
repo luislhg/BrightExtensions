@@ -44,8 +44,10 @@ internal class ExtensionEntrypoint : Extension
             MenuChild.Separator,
             MenuChild.Command<FormatXamlCommand>(),
             MenuChild.Command<FormatXamlAllCommand>(),
+            //MenuChild.Separator,
             MenuChild.Command<PropertyToINPCCommand>(),
 #if DEBUG
+            MenuChild.Command<PropertyToINPCAllCommand>(),
             MenuChild.Separator,
             MenuChild.Command<ShowDefinitionCommand>(),
             MenuChild.Separator,

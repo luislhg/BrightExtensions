@@ -14,6 +14,10 @@ public class SettingsFormatXamlData : ObservableObject
     private int closingTagSpaces = -1;
 
     [DataMember]
+    public int EndingTagSpaces { get => endingTagSpaces; set => SetProperty(ref endingTagSpaces, value); }
+    private int endingTagSpaces = -1;
+
+    [DataMember]
     public bool? IndentWithHeader { get => indentWithHeader; set => SetProperty(ref indentWithHeader, value); }
     private bool? indentWithHeader = null;
 }
