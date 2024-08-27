@@ -6,6 +6,8 @@ using BrightGit.Extensibility.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.Extensibility;
 using Microsoft.VisualStudio.Extensibility.Commands;
+using System.Threading;
+using System.Threading.Tasks;
 
 /// <summary>
 /// Extension entrypoint for the VisualStudio.Extensibility extension.
@@ -22,6 +24,8 @@ internal class ExtensionEntrypoint : Extension
                 publisherName: "Luis Henrique Goll",
                 displayName: "Bright Git Extension",
                 description: "Bright Commands and Automations with C# developers using git source control in mind!"),
+        LoadedWhen = ActivationConstraint.SolutionState(SolutionState.FullyLoaded),
+        //LoadedWhen = ActivationConstraint.SolutionState(SolutionState.Exists)
     };
 
     /// <inheritdoc />
@@ -33,6 +37,15 @@ internal class ExtensionEntrypoint : Extension
         serviceCollection.AddTransient<IDialogService>(provider => new DialogService());
         serviceCollection.AddSingleton<SettingsService>();
         serviceCollection.AddSingleton<TabsStorageService>();
+        serviceCollection.AddSingleton<GitSharpHookService>();
+        serviceCollection.AddSingleton<EFCoreManagerService>();
+        serviceCollection.AddSingleton<TabManagerService>();
+    }
+
+    protected override Task OnInitializedAsync(VisualStudioExtensibility extensibility, CancellationToken cancellationToken)
+    {
+        base.ServiceProvider.GetRequiredService<GitSharpHookService>().StartMonitoring();
+        return base.OnInitializedAsync(extensibility, cancellationToken);
     }
 
     [VisualStudioContribution]
