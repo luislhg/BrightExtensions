@@ -10,6 +10,7 @@ using System.Diagnostics;
 namespace BrightGit.Extensibility.Services;
 public class TabManagerService
 {
+    // TODO: Maybe this should be injected and then TabManagerService would need to be Scoped (accordingly to samples/doc in VS API).
     public VisualStudioExtensibility Extensibility { get; set; }
 
     private readonly TraceSource logger;
@@ -27,6 +28,8 @@ public class TabManagerService
     {
         try
         {
+            var sw = Stopwatch.StartNew();
+
             var shell = Extensibility.Shell();
             var documents = Extensibility.Documents();
             var configuration = Extensibility.Configuration();
@@ -42,6 +45,15 @@ public class TabManagerService
 
             // Restore the tabs from new branch name (if any).
             var tabsRestored = await RestoreTabsAsync(false, newBranchName, shell, documents, workspaces, CancellationToken.None);
+
+            sw.Stop();
+
+            // Inform the user.
+            var msg = $"Saved {tabsSaved?.Tabs.Count ?? 0} tabs to '{tabsSaved?.BranchName}'\n" +
+                      $"Restored {tabsRestored?.Tabs.Count ?? 0} tabs from '{tabsRestored?.BranchName}'\n" +
+                      $"({sw.ElapsedMilliseconds}ms)";
+            Debug.WriteLine(msg.Replace("\n", ". "));
+            await shell.ShowPromptAsync(msg, PromptOptions.OK, CancellationToken.None);
 
             return true;
         }
@@ -79,7 +91,7 @@ public class TabManagerService
             // Check if there are any documents opened.
             if (openedDocuments.Count == 0)
             {
-                await shell.ShowPromptAsync("No documents opened to save tabs", PromptOptions.OK, cancellationToken);
+                Debug.WriteLine("No documents opened to save tabs");
                 return null;
             }
 
@@ -128,7 +140,6 @@ public class TabManagerService
 
             sw.Stop();
             Debug.WriteLine($"Saved tabs {openedDocuments.Count} for {solutionName}.{gitBranchName} ({sw.ElapsedMilliseconds}ms)");
-            await shell.ShowPromptAsync($"Saved tabs {openedDocuments.Count} for {solutionName}.{gitBranchName} ({sw.ElapsedMilliseconds}ms)", PromptOptions.OK, cancellationToken);
 
             return tabsInfo;
         }
@@ -156,7 +167,7 @@ public class TabManagerService
             var solutionName = await VSHelper.GetSolutionNameAsync(workspaces, cancellationToken);
             if (string.IsNullOrWhiteSpace(solutionName))
             {
-                await shell.ShowPromptAsync("Please open a solution before saving tabs", PromptOptions.OK, cancellationToken);
+                await shell.ShowPromptAsync("Please open a solution before restoring tabs", PromptOptions.OK, cancellationToken);
                 return null;
             }
 
@@ -188,18 +199,15 @@ public class TabManagerService
 
                     sw.Stop();
                     Debug.WriteLine($"Restored {tabDocuments.Count} tabs for {solutionName}.{gitBranchName} ({sw.ElapsedMilliseconds}ms)");
-                    await shell.ShowPromptAsync($"Restored {tabDocuments.Count} tabs for {solutionName}.{gitBranchName} ({sw.ElapsedMilliseconds}ms)", PromptOptions.OK, cancellationToken);
                 }
                 else
                 {
                     Debug.WriteLine($"No tabs to restore for {solutionName}.{gitBranchName}");
-                    await shell.ShowPromptAsync($"No tabs to restore for {solutionName}.{gitBranchName}", PromptOptions.OK, cancellationToken);
                 }
             }
             else
             {
                 Debug.WriteLine($"No tabs to restore for {solutionName}.{gitBranchName}");
-                await shell.ShowPromptAsync($"No tabs to restore for {solutionName}.{gitBranchName}", PromptOptions.OK, cancellationToken);
             }
 
             return tabsInfo;

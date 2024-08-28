@@ -59,7 +59,7 @@ internal class TabsSaveCommand : Command
             var solutionName = await VSHelper.GetSolutionNameAsync(workspaces, cancellationToken);
             if (string.IsNullOrWhiteSpace(solutionName))
             {
-                await shell.ShowPromptAsync("Please open a solution before restoring tabs", PromptOptions.OK, cancellationToken);
+                await shell.ShowPromptAsync("Please open a solution before saving tabs", PromptOptions.OK, cancellationToken);
                 return;
             }
 
@@ -80,8 +80,8 @@ internal class TabsSaveCommand : Command
             var tabsSaved = await tabManagerService.SaveTabsAsync(true, gitBranchName, shell, documents, workspaces, cancellationToken);
 
             sw.Stop();
-            Debug.WriteLine($"Saved tabs {tabsSaved?.Tabs?.Count} for {tabsSaved?.SolutionName}.{gitBranchName} ({sw.ElapsedMilliseconds}ms)");
-            await shell.ShowPromptAsync($"Saved {tabsSaved?.Tabs.Count} tabs for {tabsSaved?.SolutionName}.{gitBranchName} ({sw.ElapsedMilliseconds}ms)", PromptOptions.OK, cancellationToken);
+            Debug.WriteLine($"Saved tabs {tabsSaved?.Tabs?.Count ?? 0} for {tabsSaved?.SolutionName}.{gitBranchName} ({sw.ElapsedMilliseconds}ms)");
+            await shell.ShowPromptAsync($"Saved {tabsSaved?.Tabs.Count ?? 0} tabs for {tabsSaved?.SolutionName}.{gitBranchName} ({sw.ElapsedMilliseconds}ms)", PromptOptions.OK, cancellationToken);
         }
         catch (Exception ex)
         {
