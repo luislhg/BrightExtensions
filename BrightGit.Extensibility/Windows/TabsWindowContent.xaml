@@ -81,14 +81,23 @@
                 <!--Branch Tabs-->
                 <Label Content="Saved Tabs - Auto by Branch" FontSize="14" FontWeight="Bold" Grid.Row="3" Margin="5"/>
                 <ListView ItemsSource="{Binding TabsStorageData.TabsBranch}" Grid.Row="4" Margin="5">
-                    <ListView.View>
-                        <GridView>
-                            <!--<GridViewColumn Header="Id" DisplayMemberBinding="{Binding Id}" Width="100"/>-->
-                            <GridViewColumn Header="Solution" DisplayMemberBinding="{Binding SolutionName}" Width="100"/>
-                            <GridViewColumn Header="Branch" DisplayMemberBinding="{Binding BranchName}" Width="100"/>
-                            <GridViewColumn Header="Date" DisplayMemberBinding="{Binding DateSaved}" Width="100"/>
-                        </GridView>
-                    </ListView.View>
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <!--<TextBlock Text="{Binding Id}" FontWeight="Bold" Margin="2"/>-->
+                                <TextBlock Text="{Binding Name}" FontStyle="Italic" Margin="2"/>
+                                <TextBlock Text="{Binding SolutionName}" Margin="2"/>
+                                <TextBlock Text="{Binding BranchName}" Margin="2"/>
+                                <ItemsControl ItemsSource="{Binding Tabs}" Margin="2">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding FileName}"/>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
                 </ListView>
                 <Grid Grid.Row="5">
                     <Grid.ColumnDefinitions>
