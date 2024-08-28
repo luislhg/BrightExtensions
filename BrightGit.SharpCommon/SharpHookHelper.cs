@@ -6,6 +6,7 @@ public class SharpHookHelper
 {
     private const string baseHook = "#!/bin/sh";
     private const string sharpHookFileName = "BrightGit.SharpHook.exe";
+    private const string sharpHookCommand = $"exec ./.git/hooks/{sharpHookFileName} PostCheckout \"$(git rev-parse --show-toplevel)\" \"$1\" \"$2\" \"$3\"";
     private const string sharpMigratorFileName = "BrightGit.SharpAutoMigrator.exe";
     private const string sharpMigratorCommand = $"exec ./.git/hooks/{sharpMigratorFileName} \"$1\" \"$2\" \"$3\"";
 
@@ -14,20 +15,33 @@ public class SharpHookHelper
     /// If it doesn't, generate a new hook file.
     /// If it does, append the new hook to the existing hook file.
     /// </summary>
-    public static void AddSharpHook(string repoDir, GitHookType hookType)
+    public static void AddSharpHook(string repoDir, GitHookType hookType = GitHookType.PostCheckout)
     {
-        // TODO:
         //string hookFilePath = Path.Combine(repoDir, ".git", "hooks", hookType.ToString());
-        //if (!File.Exists(hookFilePath))
-        //{
-        //    File.WriteAllText(hookFilePath, GetHookContent(hookType));
-        //}
-        //else
-        //{
-        //    string existingHookContent = File.ReadAllText(hookFilePath);
-        //    string newHookContent = GetHookContent(hookType);
-        //    File.WriteAllText(hookFilePath, existingHookContent + newHookContent);
-        //}
+        string hookFilePath = Path.Combine(repoDir, ".git", "hooks", "post-checkout");
+
+        // If the hook file doesn't exist, create a new hook file.
+        if (!File.Exists(hookFilePath))
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine(baseHook);
+            sb.AppendLine(sharpMigratorCommand);
+
+            File.WriteAllText(hookFilePath, sb.ToString());
+        }
+        // If the hook file exists, append the sharp command to the existing hook file.
+        else
+        {
+            string hookContent = File.ReadAllText(hookFilePath);
+            if (!hookContent.Contains(sharpHookCommand))
+            {
+                if (!hookContent.EndsWith(Environment.NewLine))
+                    hookContent += Environment.NewLine;
+
+                hookContent += sharpHookCommand;
+                File.WriteAllText(hookFilePath, hookContent);
+            }
+        }
     }
 
     public static bool CheckAutoMigratorHook(string repoDir)

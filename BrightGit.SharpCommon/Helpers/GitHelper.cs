@@ -228,4 +228,10 @@ public static class GitHelper
             return repo.Branches.Where(b => !b.IsRemote && !b.FriendlyName.Contains("/")).Select(b => b.FriendlyName).ToList();
         }
     }
+
+    public static string GetBranchNameFromCommit(Repository repo, Commit commit)
+    {
+        var branches = repo.Branches.Where(b => b.Tip.Sha == commit.Sha).ToList();
+        return branches.FirstOrDefault()?.FriendlyName;
+    }
 }

@@ -1,10 +1,11 @@
 ﻿using BrightGit.SharpCommon.Helpers;
+using EFCoreGitAutoMigration;
 using LibGit2Sharp;
 using System.Diagnostics;
 using System.Globalization;
 using System.Reflection;
 
-namespace EFCoreGitAutoMigration;
+namespace BrightGit.SharpAutoMigrator;
 public class Program
 {
     static async Task Main(string[] args)
@@ -139,7 +140,7 @@ public class Program
                 }
 
                 // Check if dotnet-ef is installed.
-                if (!(await DotnetHelper.CheckDotnetEFInstalled()))
+                if (!await DotnetHelper.CheckDotnetEFInstalled())
                 {
                     Print("ERROR: dotnet-ef not installed (Please run: `dotnet tool install --global dotnet-ef`)", 0);
                     sw.Stop();
@@ -237,7 +238,7 @@ public class Program
                 if (runUpMigrations)
                 {
                     // Check if dotnet-ef is installed.
-                    if (!(await DotnetHelper.CheckDotnetEFInstalled()))
+                    if (!await DotnetHelper.CheckDotnetEFInstalled())
                     {
                         Print("ERROR: dotnet-ef not installed (Please run: `dotnet tool install --global dotnet-ef`)", 0);
                         sw.Stop();

@@ -13,5 +13,6 @@ public enum GitHookType
     PreRebase,
     PreReceive,
     PushToCheckout,
+    PostCheckout,
     Update
 }

@@ -1,9 +1,19 @@
+using BrightGit.Extensibility.Helpers;
 using BrightGit.Extensibility.Services;
+using BrightGit.SharpCommon;
+using BrightGit.SharpCommon.Helpers;
+using Microsoft.VisualStudio.Extensibility;
 using System.Diagnostics;
 using System.IO.Pipes;
 
 public class GitSharpHookService
 {
+    // Provided at startup by the Extension.
+    public VisualStudioExtensibility Extensibility { get; set; }
+
+    public string SolutionDir { get; private set; }
+    public string CurrentBranchName { get; private set; }
+
     public bool IsMonitoring { get; private set; }
 
     private Task listeningTask;
@@ -21,12 +31,26 @@ public class GitSharpHookService
         this.eFCoreManagerService = eFCoreManagerService;
     }
 
-    public void StartMonitoring()
+    public async Task StartMonitoringAsync()
     {
         if (!IsMonitoring)
         {
-            listeningTask = Task.Run(() => ListenForGitHooks(cancellationTokenSource.Token));
-            IsMonitoring = true;
+            try
+            {
+                SolutionDir = await VSHelper.GetSolutionDirectoryAsync(Extensibility.Workspaces(), CancellationToken.None);
+                CurrentBranchName = GitHelper.GetCurrentBranchName(SolutionDir);
+
+                // Setup git hook.
+                SharpHookHelper.AddSharpHook(SolutionDir);
+
+                // Start listening for Git hooks.
+                listeningTask = Task.Run(() => ListenForGitHooks(cancellationTokenSource.Token));
+                IsMonitoring = true;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+            }
         }
         else
         {
@@ -76,27 +100,44 @@ public class GitSharpHookService
 
     private void HandleGitHookMessage(string message)
     {
-        string[] parts = message.Split(':');
-        if (parts.Length == 2)
+        string[] parts = message.Split('|');
+        if (parts.Length >= 1)
         {
             string eventName = parts[0];
-            string branchName = parts[1];
 
-            SaveAndRestoreTabs(branchName);
-            EFDatabaseMigration(branchName);
+            // Implement logic based on the eventName.
+            if (eventName == "PostCheckout" && parts.Length >= 4)
+            {
+                string repoDir = parts[1];
+                string oldRef = parts[2];
+                string newRef = parts[3];
+
+                SaveAndRestoreTabs(repoDir, oldRef, newRef);
+                EFDatabaseMigration(oldRef, newRef);
+            }
+            else
+            {
+                Debug.WriteLine($"Unknown event name or invalid lengh: {eventName} ({parts.Length})");
+            }
+        }
+        else
+        {
+            Debug.WriteLine("Invalid message format. Length is 0.");
         }
     }
 
-    private void SaveAndRestoreTabs(string branchName)
+    private void SaveAndRestoreTabs(string repoDir, string oldRef, string newRef)
     {
         // Ignore if the feature is disabled.
-        if (!settingsService.Data.Tabs.IsEnabled)
-            return;
+        //if (!settingsService.Data.Tabs.IsEnabled)
+        //    return;
 
         // Implement logic to save and restore tabs based on the branchName.
+        tabManagerService.Extensibility = Extensibility;
+        _ = tabManagerService.SaveAndRestoreTabsAsync(repoDir, oldRef, newRef);
     }
 
-    private void EFDatabaseMigration(string branchName)
+    private void EFDatabaseMigration(string oldRef, string newRef)
     {
         // Ignore if the feature is disabled.
         if (!settingsService.Data.EFCore.IsEnabled)

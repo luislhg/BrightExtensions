@@ -1,13 +1,11 @@
 ﻿namespace BrightGit.Extensibility.Commands;
 
 using BrightGit.Extensibility.Helpers;
-using BrightGit.Extensibility.Models;
 using BrightGit.Extensibility.Services;
 using Microsoft;
 using Microsoft.VisualStudio.Extensibility;
 using Microsoft.VisualStudio.Extensibility.Commands;
 using Microsoft.VisualStudio.Extensibility.Shell;
-using Microsoft.VisualStudio.RpcContracts.Documents;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,12 +16,17 @@ internal class TabsSaveCommand : Command
     private readonly TraceSource logger;
     private readonly SettingsService settingsService;
     private readonly TabsStorageService tabsStorageService;
+    private readonly TabManagerService tabManagerService;
 
-    public TabsSaveCommand(TraceSource traceSource, SettingsService settingsService, TabsStorageService tabsStorageService)
+    public TabsSaveCommand(TraceSource traceSource,
+                           SettingsService settingsService,
+                           TabsStorageService tabsStorageService,
+                           TabManagerService tabManagerService)
     {
         this.logger = Requires.NotNull(traceSource, nameof(traceSource));
         this.settingsService = settingsService;
         this.tabsStorageService = tabsStorageService;
+        this.tabManagerService = tabManagerService;
     }
 
     /// <inheritdoc />
@@ -56,31 +59,9 @@ internal class TabsSaveCommand : Command
             var solutionName = await VSHelper.GetSolutionNameAsync(workspaces, cancellationToken);
             if (string.IsNullOrWhiteSpace(solutionName))
             {
-                await shell.ShowPromptAsync("Please open a solution before saving tabs", PromptOptions.OK, cancellationToken);
+                await shell.ShowPromptAsync("Please open a solution before restoring tabs", PromptOptions.OK, cancellationToken);
                 return;
             }
-
-            // Get all opened documents.
-            var openedDocuments = await documents.GetOpenDocumentsAsync(cancellationToken);
-
-            // Check if there are any documents opened.
-            if (openedDocuments.Count == 0)
-            {
-                await shell.ShowPromptAsync("No documents opened to save tabs", PromptOptions.OK, cancellationToken);
-                return;
-            }
-
-            // Check if any document is dirty.
-            foreach (var document in openedDocuments)
-            {
-                if (document.IsDirty)
-                {
-                    await shell.ShowPromptAsync("Please save all documents before saving tabs", PromptOptions.OK, cancellationToken);
-                    return;
-                }
-            }
-
-            // TODO: In the future find a way to figure out/save the pinned state.
 
             // Format the branch name.
             string gitHeadPath = Path.Combine(await VSHelper.GetSolutionDirectoryAsync(workspaces, cancellationToken), ".git", "HEAD");
@@ -88,36 +69,14 @@ internal class TabsSaveCommand : Command
             if (File.Exists(gitHeadPath))
             {
                 gitBranchName = File.ReadAllText(gitHeadPath).Split('/').LastOrDefault().TrimEnd('\n');
-                gitBranchName = $"_{gitBranchName}";
+                gitBranchName = $"{gitBranchName}";
             }
 
-            // Save to disk.
-            TabsInfo tabsInfo = new()
-            {
-                Id = $"{solutionName}{gitBranchName}",
-                Name = $"{solutionName}{gitBranchName}",
-                SolutionName = solutionName,
-                BranchName = gitBranchName,
-                DateSaved = DateTime.Now,
-                Tabs = openedDocuments.Where(d => !d.IsReadOnly)
-                                      .Select((d, i) => new TabDocumentInfo() { FilePath = d.Moniker.LocalPath, Index = i, IsPinned = false })
-                                      .ToList()
-            };
-            tabsStorageService.AddTabsCustom(tabsInfo);
-            tabsStorageService.Save();
-
-            // Close all documents.
-            if (settingsService.Data.Tabs.CloseTabsOnSave)
-            {
-                // TODO: In the future use some faster way to close all documents (similar to VS -> "Close All Tabs").
-
-                // Close all documents in parallel.
-                await Task.WhenAll(openedDocuments.Select(document => document.CloseAsync(SaveDocumentOption.PromptSave, Extensibility, cancellationToken)));
-            }
+            var tabsSaved = await tabManagerService.SaveTabsAsync(true, gitBranchName, shell, documents, workspaces, cancellationToken);
 
             sw.Stop();
-            Debug.WriteLine($"Saved tabs {openedDocuments.Count} for {solutionName} ({sw.ElapsedMilliseconds}ms)");
-            await shell.ShowPromptAsync($"Saved {openedDocuments.Count} tabs for {solutionName} ({sw.ElapsedMilliseconds}ms)", PromptOptions.OK, cancellationToken);
+            Debug.WriteLine($"Saved tabs {tabsSaved?.Tabs?.Count} for {tabsSaved?.SolutionName}.{gitBranchName} ({sw.ElapsedMilliseconds}ms)");
+            await shell.ShowPromptAsync($"Saved {tabsSaved?.Tabs.Count} tabs for {tabsSaved?.SolutionName}.{gitBranchName} ({sw.ElapsedMilliseconds}ms)", PromptOptions.OK, cancellationToken);
         }
         catch (Exception ex)
         {

@@ -44,7 +44,11 @@ internal class ExtensionEntrypoint : Extension
 
     protected override Task OnInitializedAsync(VisualStudioExtensibility extensibility, CancellationToken cancellationToken)
     {
-        base.ServiceProvider.GetRequiredService<GitSharpHookService>().StartMonitoring();
+        // Start monitoring Git hooks.
+        base.ServiceProvider.GetRequiredService<GitSharpHookService>().Extensibility = extensibility;
+        _ = base.ServiceProvider.GetRequiredService<GitSharpHookService>().StartMonitoringAsync();
+
+        // Carry on with the initialization.
         return base.OnInitializedAsync(extensibility, cancellationToken);
     }
 
