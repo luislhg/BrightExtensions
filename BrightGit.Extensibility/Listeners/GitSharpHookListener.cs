@@ -20,7 +20,9 @@ public class GitSharpHookListener : ExtensionPart, ITextViewOpenClosedListener, 
         // If any of the features are enabled, we need to listen for Git hooks.
         if (settingsService.Data.Tabs.IsEnabled || settingsService.Data.EFCore.IsEnabled)
         {
-            _ = gitSharpHookService.StartMonitoringAsync();
+            // TODO:
+            // Disabled at the moment as I'm experimenting with FileWatcherService.
+            //_ = gitSharpHookService.StartMonitoringAsync();
         }
     }
 

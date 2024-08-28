@@ -72,6 +72,11 @@ internal class TabsSaveCommand : Command
                 gitBranchName = $"{gitBranchName}";
             }
 
+            // Debug only.
+            var openedDocuments = await documents.GetOpenDocumentsAsync(cancellationToken);
+            Debug.WriteLine($"TavsSaveCommand - openedDocuments: {openedDocuments.Count}");
+
+            // Save tabs.
             var tabsSaved = await tabManagerService.SaveTabsAsync(true, gitBranchName, shell, documents, workspaces, cancellationToken);
 
             sw.Stop();

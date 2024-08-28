@@ -2,6 +2,7 @@ using BrightGit.Extensibility.Helpers;
 using BrightGit.Extensibility.Services;
 using BrightGit.SharpCommon;
 using BrightGit.SharpCommon.Helpers;
+using LibGit2Sharp;
 using Microsoft.VisualStudio.Extensibility;
 using System.Diagnostics;
 using System.IO.Pipes;
@@ -18,17 +19,20 @@ public class GitSharpHookService
 
     private Task listeningTask;
     private readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
+    private readonly TraceSource logger;
     private readonly SettingsService settingsService;
     private readonly TabManagerService tabManagerService;
-    private readonly EFCoreManagerService eFCoreManagerService;
+    private readonly EFCoreManagerService efCoreManagerService;
 
-    public GitSharpHookService(SettingsService settingsService,
+    public GitSharpHookService(TraceSource traceSource,
+                               SettingsService settingsService,
                                TabManagerService tabManagerService,
                                EFCoreManagerService eFCoreManagerService)
     {
+        this.logger = traceSource;
         this.settingsService = settingsService;
         this.tabManagerService = tabManagerService;
-        this.eFCoreManagerService = eFCoreManagerService;
+        this.efCoreManagerService = eFCoreManagerService;
     }
 
     public async Task StartMonitoringAsync()
@@ -112,8 +116,26 @@ public class GitSharpHookService
                 string oldRef = parts[2];
                 string newRef = parts[3];
 
-                SaveAndRestoreTabs(repoDir, oldRef, newRef);
-                EFDatabaseMigration(oldRef, newRef);
+                using (var repo = new Repository(repoDir))
+                {
+                    var oldCommit = repo.Lookup<Commit>(oldRef);
+                    var newCommit = repo.Lookup<Commit>(newRef);
+                    string oldBranchName = GitHelper.GetBranchNameFromCommit(repo, oldCommit);
+                    string newBranchName = GitHelper.GetBranchNameFromCommit(repo, newCommit);
+
+                    if (!string.IsNullOrEmpty(oldBranchName) && !string.IsNullOrEmpty(newBranchName))
+                    {
+                        Debug.WriteLine($"Branch names found for commits {oldRef} ({oldBranchName}) and {newRef} ({newBranchName})");
+
+                        SaveAndRestoreTabs(repoDir, oldBranchName, newBranchName);
+                        EFDatabaseMigration(oldRef, newRef);
+                    }
+                    else
+                    {
+                        Debug.WriteLine($"Branch names not found for commits {oldRef} and {newRef}");
+                        logger.TraceEvent(TraceEventType.Information, 0, $"Branch names not found for commits {oldRef} and {newRef}");
+                    }
+                }
             }
             else
             {
@@ -126,7 +148,7 @@ public class GitSharpHookService
         }
     }
 
-    private void SaveAndRestoreTabs(string repoDir, string oldRef, string newRef)
+    private void SaveAndRestoreTabs(string repoDir, string oldBranch, string newBranch)
     {
         // Ignore if the feature is disabled.
         //if (!settingsService.Data.Tabs.IsEnabled)
@@ -134,7 +156,7 @@ public class GitSharpHookService
 
         // Implement logic to save and restore tabs based on the branchName.
         tabManagerService.Extensibility = Extensibility;
-        _ = tabManagerService.SaveAndRestoreTabsAsync(repoDir, oldRef, newRef);
+        _ = tabManagerService.SaveAndRestoreTabsAsync(repoDir, oldBranch, newBranch);
     }
 
     private void EFDatabaseMigration(string oldRef, string newRef)
