@@ -63,4 +63,21 @@ public class PropToInpcHelperTests
         Assert.AreEqual(expectedPropertyLine, resultLines.FirstOrDefault());
         Assert.AreEqual(expectedFieldLine, resultLines.LastOrDefault());
     }
+
+    [TestMethod()]
+    [DataRow("public string Name { get; set; }", false, "Set", "public string Name { get => field; set => Set(ref field, value); }")]
+    [DataRow("public int Age { get; set; }", false, "Set", "public int Age { get => field; set => Set(ref field, value); }")]
+    [DataRow("protected bool IsEnabled { get; private set; }", false, "Set", "protected bool IsEnabled { get => field; private set => Set(ref field, value); }")]
+    [DataRow("public string FullName { get; set; } = \"John Winchester\";", true, "Set", "public string FullName { get => field; set => Set(ref field, value); } = \"John Winchester\";")]
+    [DataRow("public string FullName { get; set; } = \"John Winchester\";", false, "Set", "public string FullName { get => field; set => Set(ref field, value); }")]
+    public void GenerateInpcPropertySetFieldKeywordTest(string propertyText, bool preserveDefaultValue, string setMethodName, string expectedLine)
+    {
+        // Arrange.
+        // Act.
+        var propertyLineData = PropToInpcHelper.GetPropertyLineData(propertyText);
+        var result = PropToInpcHelper.GenerateInpcPropertySetFieldKeyword(propertyLineData, preserveDefaultValue, setMethodName);
+
+        // Assert.
+        Assert.AreEqual(expectedLine, result);
+    }
 }

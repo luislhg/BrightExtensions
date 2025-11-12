@@ -83,6 +83,7 @@ internal class SettingsWindowViewModel : NotifyPropertyChangedObject
     {
         if (e.PropertyName == nameof(SettingsData.PropInpc.AddFieldAbove) ||
             e.PropertyName == nameof(SettingsData.PropInpc.AddFieldUnderscore) ||
+            e.PropertyName == nameof(SettingsData.PropInpc.UseFieldKeyword) ||
             e.PropertyName == nameof(SettingsData.PropInpc.SetMethodName))
         {
             CalculatePreviewInpc();
@@ -92,11 +93,21 @@ internal class SettingsWindowViewModel : NotifyPropertyChangedObject
     private void CalculatePreviewInpc()
     {
         var propData = PropToInpcHelper.GetPropertyLineData(PreviewInpcInput);
-        PreviewInpcOutput = PropToInpcHelper.GenerateInpcPropertySet(propData,
-                                                                     SettingsData.PropInpc.AddFieldAbove,
-                                                                     SettingsData.PropInpc.AddFieldUnderscore,
-                                                                     true,
-                                                                     SettingsData.PropInpc.SetMethodName);
+
+        if (SettingsData.PropInpc.UseFieldKeyword)
+        {
+            PreviewInpcOutput = PropToInpcHelper.GenerateInpcPropertySetFieldKeyword(propData,
+                                                                                    SettingsData.PropInpc.PreserveDefaultValue,
+                                                                                    SettingsData.PropInpc.SetMethodName);
+        }
+        else
+        {
+            PreviewInpcOutput = PropToInpcHelper.GenerateInpcPropertySet(propData,
+                                                                         SettingsData.PropInpc.AddFieldAbove,
+                                                                         SettingsData.PropInpc.AddFieldUnderscore,
+                                                                         true,
+                                                                         SettingsData.PropInpc.SetMethodName);
+        }
     }
 
     public void SaveSettings()

@@ -41,13 +41,23 @@
                     </GroupBox.Header>
                     <StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,5">
+                            <CheckBox IsChecked="{Binding SettingsData.PropInpc.UseFieldKeyword}"/>
+                            <TextBlock>
+                                <Run Text="Prefer `field` keyword"/>
+                                <Run Text="(.NET 10+)" FontStyle="Italic"/>
+                            </TextBlock>
+                        </StackPanel>
+
+                        <TextBlock Text="If/when creating a backing field:" Margin="0"/>
+                        <StackPanel Orientation="Horizontal" Margin="10,0,0,0">
                             <CheckBox IsChecked="{Binding SettingsData.PropInpc.AddFieldAbove}"/>
                             <TextBlock Text="Add field above property"/>
                         </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,5">
+                        <StackPanel Orientation="Horizontal" Margin="10,0,0,0">
                             <CheckBox IsChecked="{Binding SettingsData.PropInpc.AddFieldUnderscore}"/>
                             <TextBlock Text="Add underscore to field"/>
                         </StackPanel>
+                        
                         <StackPanel Orientation="Horizontal" Margin="0,5">
                             <TextBlock Text="Default Set method name: "/>
                             <TextBox Text="{Binding SettingsData.PropInpc.SetMethodName, UpdateSourceTrigger=PropertyChanged}" MaxLength="32"/>

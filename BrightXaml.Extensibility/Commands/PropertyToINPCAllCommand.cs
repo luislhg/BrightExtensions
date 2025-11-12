@@ -68,15 +68,20 @@ internal class PropertyToINPCAllCommand : Command
             if (propData != null)
             {
                 // Try to make an educated guess on the set method name.
-                var setMethodName = GetInUseSetMethodName(textContent);
-                if (setMethodName == null)
-                    setMethodName = settingsService.Data.PropInpc.SetMethodName;
+                var setMethodName = PropToInpcHelper.GetInUseSetMethodName(textContent) ?? settingsService.Data.PropInpc.SetMethodName;
+
+                // Determine if 'field' keyword should be used (it's already in use in the file or user has asked for it).
+                var useFieldKeyword = PropToInpcHelper.GetInUseFieldKeyword(textContent) || settingsService.Data.PropInpc.UseFieldKeyword;
 
                 // Generate INPC property.
+                var preserveDefaultValue = settingsService.Data.PropInpc.PreserveDefaultValue;
                 var addFieldAbove = settingsService.Data.PropInpc.AddFieldAbove;
                 var addFieldUnderscore = settingsService.Data.PropInpc.AddFieldUnderscore;
-                var preserveDefaultValue = settingsService.Data.PropInpc.PreserveDefaultValue;
-                var generatedCode = PropToInpcHelper.GenerateInpcPropertySet(propData, addFieldAbove, addFieldUnderscore, preserveDefaultValue, setMethodName);
+
+                // Generate code.
+                string generatedCode = (useFieldKeyword)
+                    ? PropToInpcHelper.GenerateInpcPropertySetFieldKeyword(propData, preserveDefaultValue, setMethodName)
+                    : PropToInpcHelper.GenerateInpcPropertySet(propData, addFieldAbove, addFieldUnderscore, preserveDefaultValue, setMethodName);
                 Debug.WriteLine(generatedCode);
 
                 // Apply INPC property.
@@ -100,15 +105,5 @@ internal class PropertyToINPCAllCommand : Command
             logger.TraceEvent(TraceEventType.Error, 0, ex.Message);
             await shell.ShowPromptAsync($"Error converting property: {ex.Message}", PromptOptions.OK, cancellationToken);
         }
-    }
-
-    private string GetInUseSetMethodName(string text)
-    {
-        if (text.Contains("set => Set(ref "))
-            return "Set";
-        else if (text.Contains("set => SetProperty(ref "))
-            return "SetProperty";
-
-        return null;
     }
 }

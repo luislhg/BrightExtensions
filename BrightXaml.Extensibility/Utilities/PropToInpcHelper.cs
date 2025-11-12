@@ -60,6 +60,36 @@ public static class PropToInpcHelper
         return null;
     }
 
+    public static string GenerateInpcPropertySetFieldKeyword(PropertyLineData property, bool preserveDefaultValue, string setMethodName)
+    {
+        // If property.Name starts with lower case, throw an exception.
+        if (string.IsNullOrWhiteSpace(property.Name) || char.IsLower(property.Name[0]))
+            throw new ArgumentException("Property name must start with an upper case letter.");
+
+        // Set default set method name.
+        if (string.IsNullOrWhiteSpace(setMethodName))
+            setMethodName = "SetProperty";
+
+        var sb = new StringBuilder();
+
+        string getAccessor = string.IsNullOrEmpty(property.GetAccess) ? string.Empty : property.GetAccess + " ";
+        string setAccessor = string.IsNullOrEmpty(property.SetAccess) ? string.Empty : property.SetAccess + " ";
+
+        // Property declaration using the 'field' contextual keyword.
+        sb.Append($"{property.Indentation}{property.Access} {property.Type} {property.Name}");
+        sb.Append(" {");
+        sb.Append($" {getAccessor}get => field;");
+        sb.Append($" {setAccessor}set => {setMethodName}(ref field, value);");
+        sb.Append(" }");
+
+        // Optional default value becomes an auto-property initializer.
+        if (preserveDefaultValue && !string.IsNullOrWhiteSpace(property.DefaultValue))
+            sb.Append($" = {property.DefaultValue};");
+
+        return sb.ToString();
+    }
+
+
     public static string GenerateInpcPropertySet(PropertyLineData property, bool addFieldAbove, bool addFieldUnderscore, bool preserveDefaultValue, string setMethodName)
     {
         // If property.Name starts with lower case, throw an exception.
@@ -154,4 +184,23 @@ public static class PropToInpcHelper
     //    sb.AppendLine("}");
     //    return sb.ToString();
     //}
+
+    #region Auxiliary methods
+
+    internal static string GetInUseSetMethodName(string text)
+    {
+        if (text.Contains("set => Set(ref "))
+            return "Set";
+        else if (text.Contains("set => SetProperty(ref "))
+            return "SetProperty";
+
+        return null;
+    }
+
+    internal static bool GetInUseFieldKeyword(string text)
+    {
+        return text.Contains("(ref field, value)");
+    }
+
+    #endregion
 }

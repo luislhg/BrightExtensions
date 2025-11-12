@@ -22,6 +22,10 @@ public class SettingsPropInpcData : ObservableObject
     private string setMethodName = "SetProperty";
 
     [DataMember]
+    public bool UseFieldKeyword { get => useFieldKeyword; set => SetProperty(ref useFieldKeyword, value); }
+    private bool useFieldKeyword;
+
+    [DataMember]
     public bool PreserveDefaultValue { get => preserveDefaultValue; set => SetProperty(ref preserveDefaultValue, value); }
     private bool preserveDefaultValue = true;
 
