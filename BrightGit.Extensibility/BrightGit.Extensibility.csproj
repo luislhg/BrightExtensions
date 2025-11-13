@@ -25,8 +25,8 @@
 
 	<ItemGroup>
 		<PackageReference Include="LibGit2Sharp" Version="0.31.0" />
-		<PackageReference Include="Microsoft.VisualStudio.Extensibility.Sdk" Version="17.14.40254" />
-		<PackageReference Include="Microsoft.VisualStudio.Extensibility.Build" Version="17.14.40254" />
+		<PackageReference Include="Microsoft.VisualStudio.Extensibility.Sdk" Version="17.14.40608" />
+		<PackageReference Include="Microsoft.VisualStudio.Extensibility.Build" Version="17.14.40608" />
 	</ItemGroup>
 
 	<ItemGroup>

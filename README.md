@@ -91,7 +91,7 @@ The roadmap is subject to change based on feedback and development progress.
 
 ### Prerequisites
 
-- Visual Studio 2022 (>= 17.10)
+- Visual Studio 2022 (>= 17.14)
 - .NET 8.0 SDK
 
 ### Projects Structure
