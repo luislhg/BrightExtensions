@@ -153,6 +153,7 @@ public partial class ShowDefinitionListener : ExtensionPart, ITextViewOpenClosed
                     var bindingStartOffsetFromLine = ShowDefinitionHelper.GetRelayCommandOffsetFromLine_MVVMToolkit(methodName, result);
                     var bindingWordEndOffsetFromLine = bindingStartOffsetFromLine + methodName.Length;
                     traceSource.TraceEvent(TraceEventType.Information, 0, $"Opening {result} at line {bindingWordLine}, offset {bindingWordEndOffsetFromLine}");
+                    Debug.WriteLine($"Opening {result} at line {bindingWordLine}, offset {bindingWordEndOffsetFromLine}");
                     await OpenFileAsync(result, bindingWordLine, bindingWordEndOffsetFromLine, cancellationToken);
 
                     // Close current document.
@@ -185,12 +186,16 @@ public partial class ShowDefinitionListener : ExtensionPart, ITextViewOpenClosed
                         string fieldName = textPartial.Substring(fieldStartIndex, fieldEndIndex - fieldStartIndex).Trim();
                         Debug.WriteLine($"Field name: {fieldName}");
 
-                        // This is relevant when the user is actually inspecting a generated file and not because it was opened automatically (F12 / Go To Binding).
-                        int bindingWordSize = fieldName.StartsWith('_') ? bindingWord.Length + 1 : bindingWord.Length;
-                        if (fieldEndIndex - fieldStartIndex != bindingWordSize)
+                        // field is a keyword, skip it.
+                        if (fieldName != "field")
                         {
-                            Debug.WriteLine($"Field name length ({fieldEndIndex - fieldStartIndex}) does not match binding word length ({bindingWord.Length}), exiting");
-                            return;
+                            // This is relevant when the user is actually inspecting a generated file and not because it was opened automatically (F12 / Go To Binding).
+                            int bindingWordSize = fieldName.StartsWith('_') ? bindingWord.Length + 1 : bindingWord.Length;
+                            if (fieldEndIndex - fieldStartIndex != bindingWordSize)
+                            {
+                                Debug.WriteLine($"Field name length ({fieldEndIndex - fieldStartIndex}) does not match binding word length ({bindingWord.Length}), exiting");
+                                return;
+                            }
                         }
 
                         // Find the file in the project.
@@ -207,11 +212,13 @@ public partial class ShowDefinitionListener : ExtensionPart, ITextViewOpenClosed
                         Debug.WriteLine($"ViewModel path: {result} ({sw.ElapsedMilliseconds}ms)");
 
                         // Open the file where the binding is defined.
-                        var bindingWordOffset = ShowDefinitionHelper.GetObservablePropertyOffset_MVVMToolkit(fieldName, result);
-                        var bindingWordLine = ShowDefinitionHelper.GetObservablePropertyLine_MVVMToolkit(fieldName, result);
-                        var bindingStartOffsetFromLine = ShowDefinitionHelper.GetRelayCommandOffsetFromLine_MVVMToolkit(fieldName, result);
-                        var bindingWordEndOffsetFromLine = bindingStartOffsetFromLine + fieldName.Length;
+                        string lookFor = (fieldName == "field") ? bindingWord : fieldName;
+                        var bindingWordOffset = ShowDefinitionHelper.GetObservablePropertyOffset_MVVMToolkit(lookFor, result);
+                        var bindingWordLine = ShowDefinitionHelper.GetObservablePropertyLine_MVVMToolkit(lookFor, result);
+                        var bindingStartOffsetFromLine = ShowDefinitionHelper.GetObservablePropertyOffsetFromLine_MVVMToolkit(lookFor, result);
+                        var bindingWordEndOffsetFromLine = bindingStartOffsetFromLine + lookFor.Length;
                         traceSource.TraceEvent(TraceEventType.Information, 0, $"Opening {result} at line {bindingWordLine}, offset {bindingWordEndOffsetFromLine}");
+                        Debug.WriteLine($"Opening {result} at line {bindingWordLine}, offset {bindingWordEndOffsetFromLine}");
                         await OpenFileAsync(result, bindingWordLine, bindingWordEndOffsetFromLine, cancellationToken);
 
                         // Close current document.

@@ -59,6 +59,9 @@ public static class ShowDefinitionHelper
         if (bindingWord.EndsWith("Command"))
             bindingWord = bindingWord[..^7];
 
+        // Add the opening parenthesis to find the method only.
+        bindingWord += "(";
+
         var viewModelContent = File.ReadAllText(viewModelPath);
         var bindingIndex = viewModelContent.IndexOf(bindingWord);
 
@@ -76,6 +79,9 @@ public static class ShowDefinitionHelper
         if (bindingWord.EndsWith("Command"))
             bindingWord = bindingWord[..^7];
 
+        // Add the opening parenthesis to find the method only.
+        bindingWord += "(";
+
         var viewModelContent = File.ReadAllText(viewModelPath);
         var bindingIndex = viewModelContent.IndexOf(bindingWord);
         return bindingIndex;
@@ -87,13 +93,16 @@ public static class ShowDefinitionHelper
         if (bindingWord.EndsWith("Command"))
             bindingWord = bindingWord[..^7];
 
+        // Add the opening parenthesis to find the method only.
+        bindingWord += "(";
+
         var viewModelContent = File.ReadAllLines(viewModelPath);
         for (int i = 0; i < viewModelContent.Length; i++)
         {
             if (viewModelContent[i].Contains(bindingWord))
             {
                 // Check if the line contains the RelayCommand attribute.
-                if (viewModelContent[i].Contains("[RelayCommand]"))
+                if (viewModelContent[i].Contains("[RelayCommand"))
                 {
                     return i;
                 }
@@ -102,7 +111,7 @@ public static class ShowDefinitionHelper
                     // Check the lines above if the RelayCommand attribute is there.
                     for (int j = i - 1; j >= 0; j--)
                     {
-                        if (viewModelContent[j].Contains("[RelayCommand]"))
+                        if (viewModelContent[j].Contains("[RelayCommand"))
                         {
                             // j is the line number of the RelayCommand attribute.
                             // i is the line number of the binding word.
