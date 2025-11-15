@@ -81,9 +81,39 @@ internal class SettingsWindowViewModel : NotifyPropertyChangedObject
 
     private void SettingsWindowViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(SettingsData.PropInpc.AddFieldAbove) ||
+        // UseFieldKeyword, UseObservableProperty and UseBackingField are mutually exclusive.
+        // Make sure only one is selected at a time.
+        if (e.PropertyName == nameof(SettingsData.PropInpc.UseFieldKeyword) && SettingsData.PropInpc.UseFieldKeyword)
+        {
+            SettingsData.PropInpc.UseObservableProperty = false;
+            SettingsData.PropInpc.UseBackingField = false;
+        }
+        else if (e.PropertyName == nameof(SettingsData.PropInpc.UseObservableProperty) && SettingsData.PropInpc.UseObservableProperty)
+        {
+            SettingsData.PropInpc.UseFieldKeyword = false;
+            SettingsData.PropInpc.UseBackingField = false;
+        }
+        else if (e.PropertyName == nameof(SettingsData.PropInpc.UseBackingField) && SettingsData.PropInpc.UseBackingField)
+        {
+            SettingsData.PropInpc.UseFieldKeyword = false;
+            SettingsData.PropInpc.UseObservableProperty = false;
+        }
+        else if ((e.PropertyName == nameof(SettingsData.PropInpc.UseFieldKeyword) ||
+                  e.PropertyName == nameof(SettingsData.PropInpc.UseObservableProperty) ||
+                  e.PropertyName == nameof(SettingsData.PropInpc.UseBackingField))
+                  && !SettingsData.PropInpc.UseFieldKeyword && !SettingsData.PropInpc.UseObservableProperty && !SettingsData.PropInpc.UseBackingField)
+        {
+            SettingsData.PropInpc.UseFieldKeyword = false;
+            SettingsData.PropInpc.UseObservableProperty = false;
+            SettingsData.PropInpc.UseBackingField = true;
+        }
+
+        // Update preview when relevant properties change.
+        if (e.PropertyName == nameof(SettingsData.PropInpc.UseFieldKeyword) ||
+            e.PropertyName == nameof(SettingsData.PropInpc.UseObservableProperty) ||
+            e.PropertyName == nameof(SettingsData.PropInpc.UseBackingField) ||
+            e.PropertyName == nameof(SettingsData.PropInpc.AddFieldAbove) ||
             e.PropertyName == nameof(SettingsData.PropInpc.AddFieldUnderscore) ||
-            e.PropertyName == nameof(SettingsData.PropInpc.UseFieldKeyword) ||
             e.PropertyName == nameof(SettingsData.PropInpc.SetMethodName))
         {
             CalculatePreviewInpc();
@@ -93,20 +123,19 @@ internal class SettingsWindowViewModel : NotifyPropertyChangedObject
     private void CalculatePreviewInpc()
     {
         var propData = PropToInpcHelper.GetPropertyLineData(PreviewInpcInput);
+        var conf = SettingsData.PropInpc;
 
         if (SettingsData.PropInpc.UseFieldKeyword)
         {
-            PreviewInpcOutput = PropToInpcHelper.GenerateInpcPropertySetFieldKeyword(propData,
-                                                                                    SettingsData.PropInpc.PreserveDefaultValue,
-                                                                                    SettingsData.PropInpc.SetMethodName);
+            PreviewInpcOutput = PropToInpcHelper.GenerateInpcPropertySetFieldKeyword(propData, true, conf.SetMethodName);
+        }
+        else if (SettingsData.PropInpc.UseObservableProperty)
+        {
+            PreviewInpcOutput = PropToInpcHelper.GenerateInpcPropertyObservableProperty(propData, true);
         }
         else
         {
-            PreviewInpcOutput = PropToInpcHelper.GenerateInpcPropertySet(propData,
-                                                                         SettingsData.PropInpc.AddFieldAbove,
-                                                                         SettingsData.PropInpc.AddFieldUnderscore,
-                                                                         true,
-                                                                         SettingsData.PropInpc.SetMethodName);
+            PreviewInpcOutput = PropToInpcHelper.GenerateInpcPropertySet(propData, conf.AddFieldAbove, conf.AddFieldUnderscore, true, conf.SetMethodName);
         }
     }
 

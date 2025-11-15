@@ -10,6 +10,18 @@ public class SettingsPropInpcData : ObservableObject
     private bool isEnabled = true;
 
     [DataMember]
+    public bool UseFieldKeyword { get => useFieldKeyword; set => SetProperty(ref useFieldKeyword, value); }
+    private bool useFieldKeyword = false;
+
+    [DataMember]
+    public bool UseObservableProperty { get => useObservableProperty; set => SetProperty(ref useObservableProperty, value); }
+    private bool useObservableProperty = false;
+
+    [DataMember]
+    public bool UseBackingField { get => useBackingField; set => SetProperty(ref useBackingField, value); }
+    private bool useBackingField = true;
+
+    [DataMember]
     public bool AddFieldAbove { get => addFieldAbove; set => SetProperty(ref addFieldAbove, value); }
     private bool addFieldAbove = false;
 
@@ -22,14 +34,6 @@ public class SettingsPropInpcData : ObservableObject
     private string setMethodName = "SetProperty";
 
     [DataMember]
-    public bool UseFieldKeyword { get => useFieldKeyword; set => SetProperty(ref useFieldKeyword, value); }
-    private bool useFieldKeyword;
-
-    [DataMember]
     public bool PreserveDefaultValue { get => preserveDefaultValue; set => SetProperty(ref preserveDefaultValue, value); }
     private bool preserveDefaultValue = true;
-
-    [DataMember]
-    public bool SetTryAutoMethodName { get => setTryAutoMethodName; set => SetProperty(ref setTryAutoMethodName, value); }
-    private bool setTryAutoMethodName = true;
 }

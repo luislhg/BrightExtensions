@@ -71,8 +71,39 @@ internal class PropertyToINPCCommand : Command
                 // Try to make an educated guess on the set method name.
                 var setMethodName = PropToInpcHelper.GetInUseSetMethodName(textContent) ?? settingsService.Data.PropInpc.SetMethodName;
 
-                // Determine if 'field' keyword should be used (it's already in use in the file or user has asked for it).
-                var useFieldKeyword = PropToInpcHelper.GetInUseFieldKeyword(textContent) || settingsService.Data.PropInpc.UseFieldKeyword;
+                // 1) Detect what is actually in use in the file.
+                bool inUseFieldKeyword = PropToInpcHelper.GetInUseFieldKeyword(textContent);
+                bool inUseObservableProperty = PropToInpcHelper.GetInUseObservableProperty(textContent);
+                var sw1 = Stopwatch.StartNew();
+                bool inUseBackingField = PropToInpcHelper.GetInUseBackingField(textContent, setMethodName);
+                sw1.Stop();
+                Debug.WriteLine($"GetInUseBackingField: {sw1.ElapsedMilliseconds}ms");
+
+                // 2) Decide what to use, respecting priority: FieldKeyword > ObservableProperty > BackingField.
+                bool useFieldKeyword = false;
+                bool useObservableProperty = false;
+                bool useBackingField = false;
+
+                if (inUseFieldKeyword || inUseObservableProperty || inUseBackingField)
+                {
+                    // There is at least one pattern in the file; follow the file.
+                    if (inUseFieldKeyword)
+                        useFieldKeyword = true;
+                    else if (inUseObservableProperty)
+                        useObservableProperty = true;
+                    else if (inUseBackingField)
+                        useBackingField = true;
+                }
+                else
+                {
+                    // No pattern found in the file; fallback to user preferences.
+                    if (settingsService.Data.PropInpc.UseFieldKeyword)
+                        useFieldKeyword = true;
+                    else if (settingsService.Data.PropInpc.UseObservableProperty)
+                        useObservableProperty = true;
+                    else
+                        useBackingField = true;
+                }
 
                 // Generate INPC property.
                 var preserveDefaultValue = settingsService.Data.PropInpc.PreserveDefaultValue;
@@ -80,9 +111,18 @@ internal class PropertyToINPCCommand : Command
                 var addFieldUnderscore = settingsService.Data.PropInpc.AddFieldUnderscore;
 
                 // Generate code.
-                string generatedCode = (useFieldKeyword)
-                    ? PropToInpcHelper.GenerateInpcPropertySetFieldKeyword(propData, preserveDefaultValue, setMethodName)
-                    : PropToInpcHelper.GenerateInpcPropertySet(propData, addFieldAbove, addFieldUnderscore, preserveDefaultValue, setMethodName);
+                string generatedCode = string.Empty;
+                if (useFieldKeyword)
+                    generatedCode = PropToInpcHelper.GenerateInpcPropertySetFieldKeyword(propData, preserveDefaultValue, setMethodName);
+                else if (useObservableProperty)
+                    generatedCode = PropToInpcHelper.GenerateInpcPropertyObservableProperty(propData, preserveDefaultValue);
+                else
+                    generatedCode = PropToInpcHelper.GenerateInpcPropertySet(propData, addFieldAbove, addFieldUnderscore, preserveDefaultValue, setMethodName);
+
+                // For debugging.
+                Debug.WriteLine($"UseFieldKeyword: {useFieldKeyword}" +
+                                $", UseObservableProperty: {useObservableProperty}" +
+                                $", UseBackingField: {useBackingField}");
                 Debug.WriteLine(generatedCode);
 
                 // Apply INPC property.

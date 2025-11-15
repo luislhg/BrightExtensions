@@ -65,11 +65,11 @@ public class PropToInpcHelperTests
     }
 
     [TestMethod()]
-    [DataRow("public string Name { get; set; }", false, "Set", "public string Name { get => field; set => Set(ref field, value); }")]
-    [DataRow("public int Age { get; set; }", false, "Set", "public int Age { get => field; set => Set(ref field, value); }")]
-    [DataRow("protected bool IsEnabled { get; private set; }", false, "Set", "protected bool IsEnabled { get => field; private set => Set(ref field, value); }")]
-    [DataRow("public string FullName { get; set; } = \"John Winchester\";", true, "Set", "public string FullName { get => field; set => Set(ref field, value); } = \"John Winchester\";")]
-    [DataRow("public string FullName { get; set; } = \"John Winchester\";", false, "Set", "public string FullName { get => field; set => Set(ref field, value); }")]
+    [DataRow("public string Name { get; set; }", false, "Set", "public string Name { get; set => Set(ref field, value); }")]
+    [DataRow("public int Age { get; set; }", false, "Set", "public int Age { get; set => Set(ref field, value); }")]
+    [DataRow("protected bool IsEnabled { get; private set; }", false, "Set", "protected bool IsEnabled { get; private set => Set(ref field, value); }")]
+    [DataRow("public string FullName { get; set; } = \"John Winchester\";", true, "Set", "public string FullName { get; set => Set(ref field, value); } = \"John Winchester\";")]
+    [DataRow("public string FullName { get; set; } = \"John Winchester\";", false, "Set", "public string FullName { get; set => Set(ref field, value); }")]
     public void GenerateInpcPropertySetFieldKeywordTest(string propertyText, bool preserveDefaultValue, string setMethodName, string expectedLine)
     {
         // Arrange.
@@ -79,5 +79,30 @@ public class PropToInpcHelperTests
 
         // Assert.
         Assert.AreEqual(expectedLine, result);
+    }
+
+    [TestMethod()]
+    [DataRow("public string Name { get; set; }", false, "[ObservableProperty]\r\npublic partial string Name { get; set; }")]
+    [DataRow("public int Age { get; set; }", false, "[ObservableProperty]\r\npublic partial int Age { get; set; }")]
+    [DataRow("protected bool IsEnabled { get; set; }", false, "[ObservableProperty]\r\nprotected partial bool IsEnabled { get; set; }")]
+    [DataRow("private uint Ticks { get; set; }", false, "[ObservableProperty]\r\nprivate partial uint Ticks { get; set; }")]
+    [DataRow("internal long ShortTicks { get; set; }", false, "[ObservableProperty]\r\ninternal partial long ShortTicks { get; set; }")]
+    [DataRow("public string FullName { get; set; } = \"John Winchester\";", true, "[ObservableProperty]\r\npublic partial string FullName { get; set; } = \"John Winchester\";")]
+    [DataRow("public bool IsChecked { get; set; } = true;", true, "[ObservableProperty]\r\npublic partial bool IsChecked { get; set; } = true;")]
+    [DataRow("public string FullName { get; set; } = \"John Winchester\";", false, "[ObservableProperty]\r\npublic partial string FullName { get; set; }")]
+    [DataRow("protected ulong PositiveShortTicks { private get; set; }", false, "[ObservableProperty]\r\nprotected partial ulong PositiveShortTicks { private get; set; }")]
+    [DataRow("protected ulong PositiveShortTicks { get; private set; }", false, "[ObservableProperty]\r\nprotected partial ulong PositiveShortTicks { get; private set; }")]
+    [DataRow("protected ulong PositiveShortTicks { internal get; set; }", false, "[ObservableProperty]\r\nprotected partial ulong PositiveShortTicks { internal get; set; }")]
+    [DataRow("protected ulong PositiveShortTicks { get; protected set; }", false, "[ObservableProperty]\r\nprotected partial ulong PositiveShortTicks { get; protected set; }")]
+    [DataRow("    public string Name { get; set; }", false, "    [ObservableProperty]\r\n    public partial string Name { get; set; }")]
+    public void GenerateInpcPropertyObservablePropertyTest(string propertyText, bool preserveDefaultValue, string expectedOutput)
+    {
+        // Arrange.
+        // Act.
+        var propertyLineData = PropToInpcHelper.GetPropertyLineData(propertyText);
+        var result = PropToInpcHelper.GenerateInpcPropertyObservableProperty(propertyLineData, preserveDefaultValue);
+
+        // Assert.
+        Assert.AreEqual(expectedOutput, result);
     }
 }

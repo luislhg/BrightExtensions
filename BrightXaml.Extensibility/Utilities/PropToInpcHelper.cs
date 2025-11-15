@@ -78,7 +78,7 @@ public static class PropToInpcHelper
         // Property declaration using the 'field' contextual keyword.
         sb.Append($"{property.Indentation}{property.Access} {property.Type} {property.Name}");
         sb.Append(" {");
-        sb.Append($" {getAccessor}get => field;");
+        sb.Append($" {getAccessor}get;");
         sb.Append($" {setAccessor}set => {setMethodName}(ref field, value);");
         sb.Append(" }");
 
@@ -89,6 +89,33 @@ public static class PropToInpcHelper
         return sb.ToString();
     }
 
+    public static string GenerateInpcPropertyObservableProperty(PropertyLineData property, bool preserveDefaultValue)
+    {
+        // If property.Name starts with lower case, throw an exception.
+        if (string.IsNullOrWhiteSpace(property.Name) || char.IsLower(property.Name[0]))
+            throw new ArgumentException("Property name must start with an upper case letter.");
+
+        var sb = new StringBuilder();
+
+        string getAccessor = string.IsNullOrEmpty(property.GetAccess) ? string.Empty : property.GetAccess + " ";
+        string setAccessor = string.IsNullOrEmpty(property.SetAccess) ? string.Empty : property.SetAccess + " ";
+
+        // Add [ObservableProperty] attribute.
+        sb.AppendLine($"{property.Indentation}[ObservableProperty]");
+
+        // Add property declaration with partial modifier.
+        sb.Append($"{property.Indentation}{property.Access} partial {property.Type} {property.Name}");
+        sb.Append(" {");
+        sb.Append($" {getAccessor}get;");
+        sb.Append($" {setAccessor}set;");
+        sb.Append(" }");
+
+        // Optional default value as an auto-property initializer.
+        if (preserveDefaultValue && !string.IsNullOrWhiteSpace(property.DefaultValue))
+            sb.Append($" = {property.DefaultValue};");
+
+        return sb.ToString();
+    }
 
     public static string GenerateInpcPropertySet(PropertyLineData property, bool addFieldAbove, bool addFieldUnderscore, bool preserveDefaultValue, string setMethodName)
     {
@@ -200,6 +227,32 @@ public static class PropToInpcHelper
     internal static bool GetInUseFieldKeyword(string text)
     {
         return text.Contains("(ref field, value)");
+    }
+
+    internal static bool GetInUseObservableProperty(string text)
+    {
+        return text.Contains("[ObservableProperty]");
+    }
+
+    internal static bool GetInUseBackingField(string text, string setMethodName)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+            return false;
+
+        // Handles both:
+        //   set => SetProperty(ref _myProperty, value);
+        //   set { SetProperty(ref _myProperty, value); }
+        var pattern = @"set\s*(?:=>|\{)\s*" +
+                      Regex.Escape(setMethodName) +
+                      @"\s*\(\s*ref\s+(?<name>\w+)";
+
+        var match = Regex.Match(text, pattern);
+        if (!match.Success)
+            return false;
+
+        var name = match.Groups["name"].Value;
+        // We only want a "real" backing field, not the literal "field"
+        return !string.Equals(name, "field", StringComparison.Ordinal);
     }
 
     #endregion
