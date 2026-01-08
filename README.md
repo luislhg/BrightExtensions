@@ -8,7 +8,7 @@ The suite includes two main projects at the moment: **BrightGit** and **BrightXa
 
 ### Bright Xaml 
 
-**BrightXaml** offers features specifically for C# XAML developers working with WPF, MAUI, and WinUI. It includes the following features:
+**BrightXaml** offers features specifically for C# XAML developers working with WPF, MAUI, Avalonia and WinUI. It includes the following features:
 
 - **Show View and ViewModel**: Easily open and switch between View and ViewModel files _(CTRL+E+Q)_.
   <details>
