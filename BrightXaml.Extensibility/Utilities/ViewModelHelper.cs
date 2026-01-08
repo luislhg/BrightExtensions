@@ -34,6 +34,7 @@ public static class ViewModelHelper
     public static List<string> GetViewNamePossibilities(string viewModelName)
     {
         const string suffixXaml = ".xaml";
+        const string suffixAxaml = ".axaml";
         string treatedName = viewModelName.Replace("ViewModel", string.Empty, StringComparison.InvariantCultureIgnoreCase);
         var possibilities = new List<string>
         {
@@ -42,7 +43,13 @@ public static class ViewModelHelper
             treatedName + "Page" + suffixXaml,
             treatedName + "Window" + suffixXaml,
             treatedName + "Content" + suffixXaml, // (only VS Extensibility uses this).
-            treatedName + suffixXaml
+            treatedName + suffixXaml,
+            // Avalonia extensions
+            treatedName + "View" + suffixAxaml,
+            treatedName + "Page" + suffixAxaml,
+            treatedName + "Window" + suffixAxaml,
+            treatedName + "Content" + suffixAxaml,
+            treatedName + suffixAxaml
         };
 
         return possibilities;

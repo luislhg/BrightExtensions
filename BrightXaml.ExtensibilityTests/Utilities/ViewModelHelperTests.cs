@@ -23,6 +23,11 @@ public class ViewModelHelperTests
     [DataRow("MainViewModel", "MainWindow.xaml")]
     [DataRow("MainViewModel", "Main.xaml")]
     [DataRow("MainWindowViewModel", "MainWindowContent.xaml")]
+    [DataRow("MainViewModel", "MainView.axaml")]
+    [DataRow("MainViewModel", "MainPage.axaml")]
+    [DataRow("MainViewModel", "MainWindow.axaml")]
+    [DataRow("MainViewModel", "Main.axaml")]
+    [DataRow("MainWindowViewModel", "MainWindowContent.axaml")]
     public void GetViewNamePossibilitiesTest(string viewModelName, string expected)
     {
         var possibilities = ViewModelHelper.GetViewNamePossibilities(viewModelName);

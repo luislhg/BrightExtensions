@@ -31,7 +31,7 @@ internal class ToggleViewModelCommand : Command
         Icon = new(ImageMoniker.KnownValues.Binding, IconSettings.IconAndText),
         //Icon = new(ImageMoniker.KnownValues.Code, IconSettings.IconAndText),
         Shortcuts = [new CommandShortcutConfiguration(ModifierKey.Control, Key.E, ModifierKey.Control, Key.Q)],
-        EnabledWhen = ActivationConstraint.ClientContext(ClientContextKey.Shell.ActiveSelectionPath, @"\.(cs|xaml)$"),
+        EnabledWhen = ActivationConstraint.ClientContext(ClientContextKey.Shell.ActiveSelectionPath, @"\.(cs|xaml|axaml)$"),
 
         // TODO: These don't work specifically for this command!
         //EnabledWhen = ActivationConstraint.ClientContext(ClientContextKey.Shell.ActiveEditorContentType, @"\.(cs)$"),
@@ -81,10 +81,14 @@ internal class ToggleViewModelCommand : Command
                 activeProjectPath += Path.DirectorySeparatorChar;
 
             if (fileName.EndsWith(".xaml", StringComparison.InvariantCultureIgnoreCase) ||
-                fileName.EndsWith(".xaml.cs", StringComparison.InvariantCultureIgnoreCase))
+                fileName.EndsWith(".xaml.cs", StringComparison.InvariantCultureIgnoreCase) ||
+                fileName.EndsWith(".axaml", StringComparison.InvariantCultureIgnoreCase) ||
+                fileName.EndsWith(".axaml.cs", StringComparison.InvariantCultureIgnoreCase))
             {
                 // Existing logic to find and open ViewModel.
-                string fileNameWithoutExtension = fileName.Replace(".xaml.cs", string.Empty).Replace(".xaml", string.Empty);
+                string fileNameWithoutExtension = fileName
+                    .Replace(".xaml.cs", string.Empty).Replace(".xaml", string.Empty)
+                    .Replace(".axaml.cs", string.Empty).Replace(".axaml", string.Empty);
                 var possibleViewModels = ViewModelHelper.GetViewModelNamePossibilities(fileNameWithoutExtension);
 
                 var files = await workspace
@@ -138,7 +142,8 @@ internal class ToggleViewModelCommand : Command
                     .QueryProjectsAsync(project => project
                         .Get(p => p.Files)
                         .Where(f => f.Path.StartsWith(activeProjectPath, StringComparison.InvariantCultureIgnoreCase) &&
-                                    f.FileName.EndsWith(".xaml", StringComparison.InvariantCultureIgnoreCase))
+                                    (f.FileName.EndsWith(".xaml", StringComparison.InvariantCultureIgnoreCase) ||
+                                     f.FileName.EndsWith(".axaml", StringComparison.InvariantCultureIgnoreCase)))
                         .With(f => new { f.FileName, f.Path }), cancellationToken);
 
                 var possibleFiles = files.Where(f => possibleViews.Contains(f.FileName)).Select(f => f.Path).ToList();
