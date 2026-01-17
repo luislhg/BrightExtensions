@@ -11,6 +11,7 @@ using System.Text.RegularExpressions;
 using Range = Microsoft.VisualStudio.RpcContracts.Utilities.Range;
 
 namespace BrightXaml.Extensibility.Listeners;
+
 [VisualStudioContribution]
 public partial class ShowDefinitionListener : ExtensionPart, ITextViewOpenClosedListener, ITextViewChangedListener
 {
@@ -135,13 +136,13 @@ public partial class ShowDefinitionListener : ExtensionPart, ITextViewOpenClosed
                     }
 
                     // Find the file in the project.
-                    var viewModelBadPath = textView.Document.Uri.Segments.LastOrDefault().Replace($".{methodName}.g.cs", string.Empty);
-                    viewModelBadPath = viewModelBadPath.Replace(".", "\\") + ".cs";
-                    var viewModelFileName = Path.GetFileName(viewModelBadPath);
+                    var viewModelRelPath = textView.Document.Uri.Segments.LastOrDefault().Replace($".{methodName}.g.cs", string.Empty);
+                    viewModelRelPath = ShowDefinitionHelper.FixSegmentPath(viewModelRelPath);
+                    var viewModelFileName = Path.GetFileName(viewModelRelPath);
                     var files = await Extensibility.Workspaces()
                                     .QueryProjectsAsync(project => project
                                         .Get(p => p.Files)
-                                        .Where(f => f.Path.EndsWith(viewModelFileName, StringComparison.InvariantCultureIgnoreCase))
+                                        .Where(f => f.Path.EndsWith(viewModelRelPath, StringComparison.InvariantCultureIgnoreCase))
                                         .With(f => new { f.FileName, f.Path }), cancellationToken);
 
                     var result = files.FirstOrDefault().Path;
@@ -199,13 +200,13 @@ public partial class ShowDefinitionListener : ExtensionPart, ITextViewOpenClosed
                         }
 
                         // Find the file in the project.
-                        var viewModelBadPath = textView.Document.Uri.Segments.LastOrDefault().Replace($".g.cs", string.Empty);
-                        viewModelBadPath = viewModelBadPath.Replace(".", "\\") + ".cs";
-                        var viewModelFileName = Path.GetFileName(viewModelBadPath);
+                        var viewModelRelPath = textView.Document.Uri.Segments.LastOrDefault().Replace($".g.cs", string.Empty);
+                        viewModelRelPath = ShowDefinitionHelper.FixSegmentPath(viewModelRelPath);
+                        var viewModelFileName = Path.GetFileName(viewModelRelPath);
                         var files = await Extensibility.Workspaces()
                                         .QueryProjectsAsync(project => project
                                             .Get(p => p.Files)
-                                            .Where(f => f.Path.EndsWith(viewModelFileName, StringComparison.InvariantCultureIgnoreCase))
+                                            .Where(f => f.Path.EndsWith(viewModelRelPath, StringComparison.InvariantCultureIgnoreCase))
                                             .With(f => new { f.FileName, f.Path }), cancellationToken);
 
                         var result = files.FirstOrDefault().Path;

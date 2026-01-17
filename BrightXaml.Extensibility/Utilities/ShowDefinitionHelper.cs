@@ -1,6 +1,7 @@
 ﻿using BrightXaml.Extensibility.Models;
 
 namespace BrightXaml.Extensibility.Utilities;
+
 public static class ShowDefinitionHelper
 {
     public static string GetBindingPathAtCaret(string lineContent, int caretOffset)
@@ -182,5 +183,15 @@ public static class ShowDefinitionHelper
         }
 
         return -1;
+    }
+
+    public static string FixSegmentPath(string segment)
+    {
+        // Replace ONLY the last '.'
+        int lastDot = segment.LastIndexOf('.');
+        if (lastDot < 0)
+            return segment + ".cs";
+
+        return string.Concat(segment.AsSpan(0, lastDot), "\\", segment.AsSpan(lastDot + 1), ".cs");
     }
 }
