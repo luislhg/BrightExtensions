@@ -1,7 +1,7 @@
 ﻿using Microsoft.VisualStudio.Extensibility.Shell;
-using Microsoft.VisualStudio.RpcContracts.Notifications;
 
 namespace BrightXaml.Extensibility.Services;
+
 public interface IDialogService
 {
     ShellExtensibility Shell { get; set; }
@@ -17,5 +17,12 @@ public interface IDialogService
     /// </summary>
     Task<string> ShowPromptOptionsAsync(string title, List<string> items, CancellationToken cancellationToken);
 
-    Task<DialogResult> ShowDialogProgressAsync(string message, out Action<int> progress, CancellationToken cancellationToken);
+    /// <summary>
+    /// Display a dialog with a dynamic progress bar and text.
+    /// </summary>
+    /// <param name="message">Message to be displayed</param>
+    /// <param name="progressCallback">Percent complete from 0 to 100 (Progress Bar)</param>
+    /// <param name="cancellationToken">Used to inform when the operation has been completed</param>
+    /// <returns></returns>
+    Task ShowDialogProgressAsync(string message, out Action<int, bool> progressCallback, CancellationToken cancellationToken);
 }

@@ -3,6 +3,7 @@ using Microsoft.VisualStudio.Extensibility.Shell;
 using Microsoft.VisualStudio.RpcContracts.Notifications;
 
 namespace BrightXaml.Extensibility.Services;
+
 public class DialogService : IDialogService
 {
     public ShellExtensibility Shell { get; set; }
@@ -22,31 +23,47 @@ public class DialogService : IDialogService
         return Shell.ShowPromptAsync(message, PromptOptions.RetryCancel, cancellationToken);
     }
 
-    // TODO: Progress doesn't update.
-    public Task<DialogResult> ShowDialogProgressAsync(string message, out Action<int> progress, CancellationToken cancellationToken)
+    public Task ShowDialogProgressAsync(string message, out Action<int, bool> progressCallback, CancellationToken cancellationToken)
     {
-        if (message == null)
-            message = "Processing...";
+        message ??= "Please wait...";
 
-        // Show the dialog asynchronously.
-        var dialogControl = new ProgressWindowContent();
-        dialogControl.ViewModel.ProgressText = message;
-        dialogControl.ViewModel.ProgressValue = 0;
-
-        // Return the task so that it can be awaited later.
-        var dialogResult = Shell.ShowDialogAsync(dialogControl, message, DialogOption.Close, cancellationToken);
-
-        // Try using this one instead... the issue is that we will need a service to be registered and used accross.
-        //var dialogResult = await Shell.ShowToolWindowAsync<ProgressWindow>(dialogControl, title, DialogOption.OKCancel, cancellationToken);
-
-        progress = (value) =>
+        try
         {
-            if (dialogControl != null && dialogControl.ViewModel != null)
-                dialogControl.ViewModel.ProgressValue = value;
-            //dialogControl.ViewModel.ProgressText = $"{value}% completed";
-        };
+            // Create a linked token source so we can cancel the dialog programmatically.
+            var dialogCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
-        return dialogResult;
+            // Show the dialog asynchronously.
+            var dialogWindow = new ProgressWindow();
+            var dialogControl = dialogWindow.Content;
+            dialogControl.ViewModel.ProgressText = message;
+            dialogControl.ViewModel.ProgressValue = 0;
+
+            var dialogResult = Shell.ShowDialogAsync(dialogControl, message, DialogOption.Close, dialogCts.Token);
+            progressCallback = (value, completed) =>
+            {
+                if (dialogControl?.ViewModel != null)
+                {
+                    dialogControl.ViewModel.ProgressValue = (double)value;
+                    dialogControl.ViewModel.ProgressText = $"{message} ({value}%)";
+                }
+
+                if (completed)
+                {
+                    // Cancel the dialog token to close it programmatically.
+                    dialogCts.Cancel();
+                }
+            };
+        }
+        catch (ObjectDisposedException)
+        {
+            throw new OperationCanceledException();
+        }
+        catch (Exception)
+        {
+            throw;
+        }
+
+        return Task.CompletedTask;
     }
 
     public async Task<string> ShowDialogOptionsAsync(string title, string label, List<string> items, CancellationToken cancellationToken)

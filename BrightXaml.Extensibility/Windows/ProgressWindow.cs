@@ -6,20 +6,18 @@ using Microsoft.VisualStudio.RpcContracts.RemoteUI;
 using System.Threading;
 using System.Threading.Tasks;
 
-/// <summary>
-/// A sample tool window.
-/// </summary>
 [VisualStudioContribution]
 public class ProgressWindow : ToolWindow
 {
-    private readonly ProgressWindowContent content = new();
+    internal ProgressWindowContent Content { get; private set; }
+    internal ProgressWindowViewModel ViewModel { get; private set; }
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="ProgressWindow" /> class.
-    /// </summary>
     public ProgressWindow()
     {
         this.Title = "Progress Window";
+        this.Content = new ProgressWindowContent();
+        this.ViewModel = Content.ViewModel;
+        Content.ViewModel.CloseWindow = (cancellationToken) => { _ = HideAsync(cancellationToken); };
     }
 
     /// <inheritdoc />
@@ -39,14 +37,14 @@ public class ProgressWindow : ToolWindow
     /// <inheritdoc />
     public override Task<IRemoteUserControl> GetContentAsync(CancellationToken cancellationToken)
     {
-        return Task.FromResult<IRemoteUserControl>(content);
+        return Task.FromResult<IRemoteUserControl>(Content);
     }
 
     /// <inheritdoc />
     protected override void Dispose(bool disposing)
     {
         if (disposing)
-            content.Dispose();
+            Content.Dispose();
 
         base.Dispose(disposing);
     }

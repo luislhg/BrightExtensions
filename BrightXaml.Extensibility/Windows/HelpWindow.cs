@@ -6,9 +6,6 @@ using Microsoft.VisualStudio.RpcContracts.RemoteUI;
 using System.Threading;
 using System.Threading.Tasks;
 
-/// <summary>
-/// A sample tool window.
-/// </summary>
 [VisualStudioContribution]
 public class HelpWindow : ToolWindow
 {

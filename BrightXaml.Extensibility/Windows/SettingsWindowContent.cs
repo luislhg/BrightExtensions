@@ -10,9 +10,6 @@ internal class SettingsWindowContent : RemoteUserControl
 {
     public SettingsWindowViewModel ViewModel => base.DataContext as SettingsWindowViewModel;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="SettingsWindowContent" /> class.
-    /// </summary>
     public SettingsWindowContent(SettingsService settingsService)
         : base(dataContext: new SettingsWindowViewModel(settingsService))
     {

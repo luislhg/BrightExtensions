@@ -7,17 +7,11 @@ using Microsoft.VisualStudio.RpcContracts.RemoteUI;
 using System.Threading;
 using System.Threading.Tasks;
 
-/// <summary>
-/// A sample tool window.
-/// </summary>
 [VisualStudioContribution]
 public class SettingsWindow : ToolWindow
 {
     private readonly SettingsWindowContent content;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="SettingsWindow" /> class.
-    /// </summary>
     public SettingsWindow(SettingsService settingsService)
     {
         this.Title = "Bright Xaml - Settings";

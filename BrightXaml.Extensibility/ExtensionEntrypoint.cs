@@ -53,6 +53,9 @@ internal class ExtensionEntrypoint : Extension
             MenuChild.Separator,
             MenuChild.Command<ExtractClassesInUseCommand>(),
             MenuChild.Command<ExtractFolderCommand>(),
+            MenuChild.Separator,
+            MenuChild.Command<TestProgressReportCommand>(),
+            MenuChild.Command<TestProgressDialogCommand>(),
 #endif
             MenuChild.Separator,
             MenuChild.Command<SettingsWindowCommand>(),
