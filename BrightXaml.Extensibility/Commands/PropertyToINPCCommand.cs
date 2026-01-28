@@ -5,6 +5,7 @@ using BrightXaml.Extensibility.Utilities;
 using Microsoft;
 using Microsoft.VisualStudio.Extensibility;
 using Microsoft.VisualStudio.Extensibility.Commands;
+using Microsoft.VisualStudio.Extensibility.Editor;
 using Microsoft.VisualStudio.Extensibility.Shell;
 using System.Diagnostics;
 using System.Threading;
@@ -64,8 +65,34 @@ internal class PropertyToINPCCommand : Command
 
         try
         {
+            // If line is empty, ignore it
+            if (string.IsNullOrWhiteSpace(lineContent))
+            {
+                logger.TraceEvent(TraceEventType.Warning, 0, "Current line is empty. Ignoring.");
+                return;
+            }
+
+            // Check if property spans multiple lines by looking for opening/closing braces.
+            string propertyText = lineContent;
+            int replaceStartOffset = -1;
+            int replaceLength = -1;
+
+            // If the current line doesn't contain both { and }, try to read multiple lines.
+            if (!lineContent.Contains("{") || !lineContent.Contains("}"))
+            {
+                var allLines = textView.Document.Text.ToArray();
+                var fullText = new string(allLines);
+
+                // Try to combine multi-line property into a single line.
+                var combinedProperty = PropToInpcHelper.CombineMultiLineProperty(fullText, insertionPositionOffset, out replaceStartOffset, out replaceLength);
+                if (combinedProperty != null)
+                {
+                    propertyText = combinedProperty;
+                }
+            }
+
             // Convert prop line to INPC.
-            var propData = PropToInpcHelper.GetPropertyLineData(lineContent);
+            var propData = PropToInpcHelper.GetPropertyLineData(propertyText);
             if (propData != null)
             {
                 // Try to make an educated guess on the set method name.
@@ -125,11 +152,28 @@ internal class PropertyToINPCCommand : Command
                                 $", UseBackingField: {useBackingField}");
                 Debug.WriteLine(generatedCode);
 
-                // Apply INPC property.
+                // Apply INPC property - replace the property text.
                 await editor.EditAsync(
                 batch =>
                 {
-                    textView.Document.AsEditable(batch).Replace(line.Text, generatedCode);
+                    if (replaceStartOffset >= 0 && replaceLength > 0)
+                    {
+                        // Multi-line property - manually extract the text range and replace it.
+                        var fullText = new string(textView.Document.Text.ToArray());
+                        var textBeforeProperty = fullText.Substring(0, replaceStartOffset);
+                        var textAfterProperty = fullText.Substring(replaceStartOffset + replaceLength);
+                        var newFullText = textBeforeProperty + generatedCode + textAfterProperty;
+                        textView.Document.AsEditable(batch).Replace(textView.Document.Text, newFullText);
+
+                        // Move caret to the start of the new property line.
+                        var caretPosition = new TextPosition(textView.Document, replaceStartOffset + (generatedCode.Length - generatedCode.TrimStart().Length));
+                        textView.AsEditable(batch).SetSelections([new Selection(activePosition: caretPosition, anchorPosition: caretPosition, insertionPosition: caretPosition)]);
+                    }
+                    else
+                    {
+                        // Single line property - replace the current line.
+                        textView.Document.AsEditable(batch).Replace(line.Text, generatedCode);
+                    }
                 },
                 cancellationToken);
 
