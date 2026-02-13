@@ -262,4 +262,62 @@ public class PropToInpcHelperTests
         StringAssert.Contains(result, "protected");
         StringAssert.Contains(result, "get; set;");
     }
+
+    [TestMethod()]
+    public void CombineMultiLineProperty_CaretOnClassClosingBrace_ReturnsNull()
+    {
+        // Arrange - caret is on the class closing brace, not a property
+        string fullText = "public class MyClass\r\n{\r\n    public string Name { get; set; }\r\n}";
+        int caretOffset = 63; // On the class closing brace }
+
+        // Act
+        var result = PropToInpcHelper.CombineMultiLineProperty(fullText, caretOffset, out int startOffset, out int length);
+
+        // Assert - Should return null because there's no multi-line property at the caret
+        Assert.IsNull(result);
+        Assert.AreEqual(-1, startOffset);
+        Assert.AreEqual(-1, length);
+    }
+
+    [TestMethod()]
+    public void CombineMultiLineProperty_CaretOnEmptyLine_ReturnsNull()
+    {
+        // Arrange - caret is on an empty line between properties
+        string fullText = "public class MyClass\r\n{\r\n    public string Name { get; set; }\r\n\r\n    public int Age { get; set; }\r\n}";
+        int caretOffset = 65; // On the empty line
+
+        // Act
+        var result = PropToInpcHelper.CombineMultiLineProperty(fullText, caretOffset, out int startOffset, out int length);
+
+        // Assert - Should return null because caret is on an empty line
+        Assert.IsNull(result);
+    }
+
+    [TestMethod()]
+    public void CombineMultiLineProperty_CaretOnClassOpeningBrace_ReturnsNull()
+    {
+        // Arrange - caret is on the class opening brace
+        string fullText = "public class MyClass\r\n{\r\n    public string Name { get; set; }\r\n}";
+        int caretOffset = 23; // On the class opening brace {
+
+        // Act
+        var result = PropToInpcHelper.CombineMultiLineProperty(fullText, caretOffset, out int startOffset, out int length);
+
+        // Assert - Should return null because the { belongs to the class, not a property
+        Assert.IsNull(result);
+    }
+
+    [TestMethod()]
+    public void CombineMultiLineProperty_CaretOnMethodBrace_ReturnsNull()
+    {
+        // Arrange - caret is on a method's closing brace
+        string fullText = "public class MyClass\r\n{\r\n    public void Method()\r\n    {\r\n    }\r\n}";
+        int caretOffset = 60; // On the method's closing brace }
+
+        // Act
+        var result = PropToInpcHelper.CombineMultiLineProperty(fullText, caretOffset, out int startOffset, out int length);
+
+        // Assert - Should return null because braces belong to a method, not a property
+        Assert.IsNull(result);
+    }
 }

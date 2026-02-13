@@ -97,9 +97,14 @@ public static class PropToInpcHelper
         if (currentLine.Contains("{") && currentLine.Contains("}"))
             return null;
 
+        // If current line is empty or only contains whitespace, return null.
+        if (string.IsNullOrWhiteSpace(currentLine))
+            return null;
+
         // Search upwards to find the start of the property (line with property declaration).
         // A property declaration line has: access_modifier type name OR type name (without braces on same line).
         int startLineIndex = currentLineIndex;
+        bool foundPropertyDeclaration = false;
         for (int i = currentLineIndex; i >= 0 && i >= currentLineIndex - 10; i--)
         {
             if (i < lines.Length)
@@ -111,13 +116,22 @@ public static class PropToInpcHelper
                                         line.StartsWith("protected ") || line.StartsWith("internal ");
                 bool hasGetOrSet = line.Contains("get;") || line.Contains("set;");
 
-                if (hasAccessModifier && !hasGetOrSet)
+                // Skip lines that are class/method declarations (contain class, void, etc.)
+                bool isClassOrMethod = line.Contains(" class ") || line.Contains("void ") || 
+                                       line.Contains("(") || line.Contains(")");
+
+                if (hasAccessModifier && !hasGetOrSet && !isClassOrMethod)
                 {
                     startLineIndex = i;
+                    foundPropertyDeclaration = true;
                     break;
                 }
             }
         }
+
+        // If we didn't find a property declaration, return null.
+        if (!foundPropertyDeclaration)
+            return null;
 
         // Search downwards to find the closing brace.
         int endLineIndex = currentLineIndex;
@@ -140,6 +154,10 @@ public static class PropToInpcHelper
         if (!foundOpenBrace || !foundCloseBrace)
             return null;
 
+        // Verify that the current line is within the property range (startLineIndex to endLineIndex).
+        if (currentLineIndex < startLineIndex || currentLineIndex > endLineIndex)
+            return null;
+
         // Combine lines.
         var propertyLines = new List<string>();
         for (int i = startLineIndex; i <= endLineIndex; i++)
@@ -152,6 +170,10 @@ public static class PropToInpcHelper
         string indent = new string(' ', propertyLines[0].Length - propertyLines[0].TrimStart().Length);
         var combined = string.Join(" ", propertyLines.Select(l => l.Trim()));
         string propertyText = indent + combined;
+
+        // Validate that the combined text is actually an auto-property (must contain get; and set;).
+        if (!propertyText.Contains("get;") || !propertyText.Contains("set;"))
+            return null;
 
         // Calculate the offset and length to replace.
         replaceStartOffset = 0;
