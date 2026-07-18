@@ -1,4 +1,5 @@
 ﻿using LibGit2Sharp;
+using System.Diagnostics;
 using System.Globalization;
 
 namespace BrightGit.SharpCommon.Helpers;
@@ -28,6 +29,33 @@ public static class GitHelper
 
             // Get migration files from the current branch.
             return GetMigrationFilesFromTree(currentCommit.Tree, relativeMigrationDir);
+        }
+    }
+
+    public static List<string> FindDBMigrationsInBranch(string repoDir, string branchName)
+    {
+        using (var repo = new Repository(repoDir))
+        {
+            // Get the branch.
+            var branch = repo.Branches[branchName];
+            if (branch == null)
+            {
+                throw new InvalidOperationException($"Branch {branchName} not found.");
+            }
+
+            // Get the tip of the branch.
+            var commit = branch.Tip;
+            if (commit == null)
+            {
+                throw new InvalidOperationException($"No commit found in branch {branch.FriendlyName}.");
+            }
+
+            // Define the migrations directory path relative to the repository root.
+            var migrationDir = GetMigrationsDirectory(repoDir);
+            var relativeMigrationDir = migrationDir.Replace(repo.Info.WorkingDirectory, string.Empty).TrimStart(Path.DirectorySeparatorChar);
+
+            // Get migration files from the branch.
+            return GetMigrationFilesFromTree(commit.Tree, relativeMigrationDir);
         }
     }
 
@@ -233,5 +261,48 @@ public static class GitHelper
     {
         var branches = repo.Branches.Where(b => b.Tip.Sha == commit.Sha).ToList();
         return branches.FirstOrDefault()?.FriendlyName;
+    }
+
+    public static Task<bool> AddWorktreeAsync(string repoDir, string worktreePath, string committish)
+    {
+        // Detached so it works even if the committish is a branch checked out elsewhere.
+        return RunGitCommandAsync(repoDir, $"worktree add --detach \"{worktreePath}\" \"{committish}\"");
+    }
+
+    public static Task<bool> RemoveWorktreeAsync(string repoDir, string worktreePath)
+    {
+        return RunGitCommandAsync(repoDir, $"worktree remove --force \"{worktreePath}\"");
+    }
+
+    public static Task<bool> PruneWorktreesAsync(string repoDir)
+    {
+        return RunGitCommandAsync(repoDir, "worktree prune");
+    }
+
+    public static async Task<bool> RunGitCommandAsync(string repoDir, string arguments)
+    {
+        ProcessStartInfo startInfo = new ProcessStartInfo
+        {
+            FileName = "git",
+            Arguments = arguments,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            WorkingDirectory = repoDir
+        };
+
+        using (Process process = new Process { StartInfo = startInfo })
+        {
+            process.OutputDataReceived += (sender, e) => { Console.WriteLine(e.Data); Debug.WriteLine(e.Data); };
+            process.ErrorDataReceived += (sender, e) => { Console.WriteLine(e.Data); Debug.WriteLine(e.Data); };
+
+            process.Start();
+            process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
+            await process.WaitForExitAsync();
+
+            return process.ExitCode == 0;
+        }
     }
 }

@@ -109,6 +109,10 @@ public class GitFileWatcherService
     {
         try
         {
+            // Ignore HEAD changes caused by EFCoreManagerService while it checks out branches to revert migrations.
+            if (efCoreManagerService.IsBusy)
+                return;
+
             using (var repo = new Repository(SolutionDir))
             {
                 var oldBranchName = CurrentBranchName;

@@ -8,6 +8,11 @@ public static class DotnetHelper
         return RunDotnetCommandAsync(projectDir, $"ef database update {migrationName}");
     }
 
+    public static Task<bool> RestoreProjectAsync(string projectDir)
+    {
+        return RunDotnetCommandAsync(projectDir, "restore");
+    }
+
     public static async Task<bool> RunDotnetCommandAsync(string projectDir, string arguments)
     {
         ProcessStartInfo startInfo = new ProcessStartInfo
