@@ -5,7 +5,6 @@ using BrightXaml.Extensibility.Utilities;
 using Microsoft;
 using Microsoft.VisualStudio.Extensibility;
 using Microsoft.VisualStudio.Extensibility.Commands;
-using Microsoft.VisualStudio.Extensibility.Editor;
 using Microsoft.VisualStudio.Extensibility.Shell;
 using Microsoft.VisualStudio.ProjectSystem.Query;
 using Microsoft.VisualStudio.RpcContracts.OpenDocument;
@@ -36,7 +35,7 @@ internal class ShowDefinitionCommand : Command
         Icon = new(ImageMoniker.KnownValues.Binding, IconSettings.IconAndText),
         //Shortcuts = [new CommandShortcutConfiguration(ModifierKey.Control, Key.F12)],   // Doesn't work?
         Shortcuts = [new CommandShortcutConfiguration(ModifierKey.Control, Key.E, ModifierKey.Control, Key.D)],
-        EnabledWhen = ActivationConstraint.ClientContext(ClientContextKey.Shell.ActiveEditorFileName, @"\.(xaml)$"),
+        EnabledWhen = ActivationConstraint.ClientContext(ClientContextKey.Shell.ActiveEditorFileName, @"\.(xaml|axaml)$"),
         TooltipText = "Navigates to the real definition of the binding",
     };
 
@@ -114,7 +113,7 @@ internal class ShowDefinitionCommand : Command
 
                     // Existing logic to find and open ViewModel.
                     var fileName = Path.GetFileName(textViewFilePath);
-                    string fileNameWithoutExtension = fileName.Replace(".xaml", string.Empty);
+                    string fileNameWithoutExtension = fileName.Replace(".xaml", string.Empty).Replace(".axaml", string.Empty);
                     var possibleViewModels = ViewModelHelper.GetViewModelNamePossibilities(fileNameWithoutExtension);
 
                     var files = await workspace
@@ -130,25 +129,18 @@ internal class ShowDefinitionCommand : Command
                     {
                         // NOTE: We might have several kinds of command declaration, we'll focus on the MVVM Community Toolkit pattern.
                         // Find this binding path in the view model.
-                        var bindingWordOffset = ShowDefinitionHelper.GetRelayCommandOffset_MVVMToolkit(bindingWord, result);
                         var bindingWordLine = ShowDefinitionHelper.GetRelayCommandLine_MVVMToolkit(bindingWord, result);
-                        Debug.WriteLine("bindingWordOffset: " + bindingWordOffset);
-                        Debug.WriteLine("bindingWordLine: " + bindingWordLine);
+                        var bindingWordOffset = ShowDefinitionHelper.GetRelayCommandOffset_MVVMToolkit(bindingWord, result);
                         if (bindingWordOffset >= 0)
                         {
-                            // Open the file where the binding is defined.
-                            var options = new OpenDocumentOptions(activate: true, ensureVisible: new Range(bindingWordLine, 0, 0, 0), ensureVisibleOptions: EnsureRangeVisibleOptions.MinimumScroll);
-                            var openedDocument = await Extensibility.Documents().OpenTextDocumentAsync(new Uri(result), options, cancellationToken);
-                            var openedTextView = await Extensibility.Editor().GetActiveTextViewAsync(context, cancellationToken);
+                            var bindingStartOffsetFromLine = ShowDefinitionHelper.GetRelayCommandOffsetFromLine_MVVMToolkit(bindingWord, result);
+                            var methodName = bindingWord.Remove(bindingWord.Length - 7);
+                            var bindingWordEndOffsetFromLine = bindingStartOffsetFromLine + methodName.Length;
+                            logger.TraceEvent(TraceEventType.Information, 0, $"Opening {result} at line {bindingWordLine}, offset {bindingWordEndOffsetFromLine}");
+                            Debug.WriteLine($"Opening {result} at line {bindingWordLine}, offset {bindingWordEndOffsetFromLine}");
 
-                            // TODO: Navigate (caret/scroll) to the binding definition, isn't working yet.
-                            await Extensibility.Editor().EditAsync(
-                            batch =>
-                            {
-                                var caret = new TextPosition(openedTextView.Document, bindingWordOffset);
-                                openedTextView.AsEditable(batch).SetSelections([new Selection(activePosition: caret, anchorPosition: caret, insertionPosition: caret)]);
-                            },
-                            cancellationToken);
+                            // Open the file where the binding is defined.
+                            await OpenFileAsync(result, bindingWordLine, bindingWordEndOffsetFromLine, cancellationToken);
 
                             sw.Stop();
                             Debug.WriteLine($"Opened binding definition for {bindingWord} ({sw.ElapsedMilliseconds}ms)");
@@ -182,5 +174,12 @@ internal class ShowDefinitionCommand : Command
             logger.TraceEvent(TraceEventType.Error, 0, ex.Message);
             await shell.ShowPromptAsync($"Error showing binding definition: {ex.Message}", PromptOptions.OK, cancellationToken);
         }
+    }
+
+    public async Task OpenFileAsync(string fileName, int lineStart, int columnStartOffset, CancellationToken cancellationToken)
+    {
+        var options = new OpenDocumentOptions(activate: true, selection: new Range(lineStart, columnStartOffset, 0, 0));
+        //var options = new OpenDocumentOptions(activate: true, ensureVisible: new Range(caretLine, 0, 0, 0), ensureVisibleOptions: EnsureRangeVisibleOptions.MinimumScroll);
+        await Extensibility.Documents().OpenTextDocumentAsync(new Uri(fileName), options, cancellationToken);
     }
 }
