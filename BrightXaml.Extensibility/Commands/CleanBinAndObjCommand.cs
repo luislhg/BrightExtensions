@@ -5,6 +5,7 @@ using Microsoft.VisualStudio.Extensibility;
 using Microsoft.VisualStudio.Extensibility.Commands;
 using Microsoft.VisualStudio.Extensibility.Shell;
 using Microsoft.VisualStudio.ProjectSystem.Query;
+using Microsoft.VisualStudio.RpcContracts.ProgressReporting;
 using System.Diagnostics;
 using System.Text;
 using System.Threading;
@@ -43,25 +44,46 @@ internal class CleanBinAndObjCommand : Command
         var workspace = Extensibility.Workspaces();
         var documents = Extensibility.Documents();
 
-        // Get the directories from all active projects in the solution.        
-        var projectsDirs = (await workspace.QuerySolutionAsync(solution => solution.Get(p => p.Projects).With(p => p.Path), cancellationToken)).ToList();
-        var projectsCleaned = new StringBuilder();
-        foreach (var project in projectsDirs)
+        try
         {
-            var projectDirectory = Path.GetDirectoryName(project.Path);
-            Debug.WriteLine($"Cleaning bin and obj directories in {projectDirectory}");
-            if (!string.IsNullOrWhiteSpace(projectDirectory))
+            // Get the directories from all active projects in the solution.
+            var projectsDirs = (await workspace.QuerySolutionAsync(solution => solution.Get(p => p.Projects).With(p => p.Path), cancellationToken)).ToList();
+            var projectsCleaned = new StringBuilder();
+            int i = 0, max = projectsDirs.Count;
+            using (var progress = await shell.StartProgressReportingAsync("Cleaning bin and obj directories", new(true), cancellationToken))
             {
-                await CleanDirectoryAsync(projectDirectory, cancellationToken);
-                projectsCleaned.AppendLine(Path.GetFileName(projectDirectory));
-            }
-        }
+                foreach (var project in projectsDirs)
+                {
+                    var projectDirectory = Path.GetDirectoryName(project.Path);
+                    if (!string.IsNullOrWhiteSpace(projectDirectory))
+                    {
+                        Debug.WriteLine($"Cleaning bin and obj directories in {projectDirectory}");
 
-        sw.Stop();
-        await shell.ShowPromptAsync($"Cleaned bin and obj directories for {projectsDirs.Count} projects:" +
-                                    $"\n{projectsCleaned}" +
-                                    $"\nTime Elapsed: {sw.Elapsed.TotalMilliseconds:N0}ms",
-                                    PromptOptions.OK, cancellationToken);
+                        var projectName = Path.GetFileName(projectDirectory);
+                        progress.Report(CreateProgressStatus(i++, max, $"Cleaning bin and obj for: {projectName}"));
+                        progress.CancellationToken.ThrowIfCancellationRequested();
+                        await (Task.Delay(2000));
+                        await CleanDirectoryAsync(projectDirectory, cancellationToken);
+                        projectsCleaned.AppendLine(projectName);
+                    }
+                }
+            }
+
+            sw.Stop();
+            await shell.ShowPromptAsync($"Cleaned bin and obj directories for {projectsDirs.Count} projects:" +
+                                        $"\n{projectsCleaned}" +
+                                        $"\nTime Elapsed: {sw.Elapsed.TotalMilliseconds:N0}ms",
+                                        PromptOptions.OK, cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            await shell.ShowPromptAsync("Operation canceled by user.", PromptOptions.OK, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            logger.TraceEvent(TraceEventType.Error, 0, $"Error in CleanBinAndObjCommand: {ex}");
+            await shell.ShowPromptAsync($"An error occurred: {ex.Message}", PromptOptions.OK, cancellationToken);
+        }
     }
 
     private async Task CleanDirectoryAsync(string directoryPath, CancellationToken cancellationToken)
@@ -95,4 +117,6 @@ internal class CleanBinAndObjCommand : Command
             await Extensibility.Shell().ShowPromptAsync($"Error while cleaning directory {directoryPath}: {ex.Message}", PromptOptions.OK, cancellationToken);
         }
     }
+
+    public static ProgressStatus CreateProgressStatus(int current, int max, string msg = "Please wait...") => new((int)(current / (double)max * 100), msg);
 }
