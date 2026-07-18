@@ -26,6 +26,8 @@ internal class ExtensionEntrypoint : Extension
                 publisherName: "Luis Henrique Goll",
                 displayName: "Bright Git Extension",
                 description: "Bright Commands and Automations with C# developers using git source control in mind!"),
+
+        // Required to make our extension activate when a solution is opened (so we can track git repo events).
         LoadedWhen = ActivationConstraint.SolutionState(SolutionState.FullyLoaded),
         //LoadedWhen = ActivationConstraint.SolutionState(SolutionState.Exists)
     };

@@ -5,6 +5,7 @@ using Microsoft.VisualStudio.Extensibility;
 using System.Diagnostics;
 
 namespace BrightGit.Extensibility.Services;
+
 public class GitFileWatcherService
 {
     // Provided at startup by the Extension.
@@ -13,14 +14,14 @@ public class GitFileWatcherService
     public string SolutionDir { get; private set; }
     public string CurrentBranchName { get; private set; }
 
-    private FileSystemWatcher watcher;
-
     public bool IsMonitoring { get; private set; }
 
     private readonly TraceSource logger;
     private readonly SettingsService settingsService;
     private readonly TabManagerService tabManagerService;
     private readonly EFCoreManagerService efCoreManagerService;
+
+    private FileSystemWatcher watcher;
 
     public GitFileWatcherService(TraceSource traceSource,
                                  SettingsService settingsService,
@@ -118,7 +119,11 @@ public class GitFileWatcherService
                     Debug.WriteLine($"Branch changed from {oldBranchName} to {currentBranch}.");
                     logger.TraceInformation($"Branch changed from {oldBranchName} to {currentBranch}.");
 
-                    // Save and restore tabs.
+                    // Trigger: Update EF Core context.
+                    efCoreManagerService.Extensibility = Extensibility;
+                    _ = efCoreManagerService.CheckMigrationsAsync(SolutionDir, oldBranchName, CurrentBranchName);
+
+                    // Trigger: Save and restore tabs.
                     tabManagerService.Extensibility = Extensibility;
                     _ = tabManagerService.SaveAndRestoreTabsAsync(SolutionDir, oldBranchName, CurrentBranchName);
                 }
