@@ -8,6 +8,7 @@ using Microsoft.VisualStudio.RpcContracts.OpenDocument;
 using System.Diagnostics;
 
 namespace BrightGit.Extensibility.Services;
+
 public class TabManagerService
 {
     // TODO: Maybe this should be injected and then TabManagerService would need to be Scoped (accordingly to samples/doc in VS API).
@@ -134,7 +135,6 @@ public class TabManagerService
             if (closeTabs)
             {
                 // TODO: In the future use some faster way to close all documents (similar to VS -> "Close All Tabs").
-
                 await Task.WhenAll(openedDocuments.Select(document => document.CloseAsync(SaveDocumentOption.PromptSave, Extensibility, cancellationToken)));
             }
 

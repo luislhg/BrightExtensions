@@ -1,9 +1,66 @@
-﻿using Microsoft.VisualStudio.Extensibility.Shell;
+﻿using BrightGit.Extensibility.Windows;
+using Microsoft.VisualStudio.Extensibility.Shell;
+using Microsoft.VisualStudio.RpcContracts.Notifications;
+using System.Diagnostics;
 
 namespace BrightGit.Extensibility.Services;
 public class DialogService : IDialogService
 {
     public ShellExtensibility Shell { get; set; }
+
+    public Task ShowDialogProgressAsync(string title, out Action<int, string, bool> progressCallback, CancellationToken cancellationToken)
+    {
+        title ??= "Please wait...";
+
+        // Create a linked token source so we can cancel the dialog programmatically.
+        var dialogCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
+        // Show the dialog asynchronously (the caller updates it through the callback while it's open).
+        var dialogControl = new ProgressWindowContent();
+        dialogControl.ViewModel.ProgressText = title;
+        dialogControl.ViewModel.ProgressValue = 0;
+
+        var dialogTask = ShowAndDisposeAsync();
+
+        string lastMessage = title;
+        progressCallback = (value, message, completed) =>
+        {
+            try
+            {
+                if (dialogControl?.ViewModel != null)
+                {
+                    lastMessage = message ?? lastMessage;
+                    dialogControl.ViewModel.ProgressValue = value;
+                    dialogControl.ViewModel.ProgressText = $"{lastMessage} ({value}%)";
+                }
+
+                if (completed)
+                {
+                    // Cancel the dialog token to close it programmatically.
+                    dialogCts.Cancel();
+                }
+            }
+            catch (Exception ex)
+            {
+                // The dialog may already be closed/disposed, updating progress should never crash the operation.
+                Debug.WriteLine(ex.Message);
+            }
+        };
+
+        return dialogTask;
+
+        async Task ShowAndDisposeAsync()
+        {
+            try
+            {
+                await Shell.ShowDialogAsync(dialogControl, title, DialogOption.Close, dialogCts.Token);
+            }
+            finally
+            {
+                dialogControl.Dispose();
+            }
+        }
+    }
 
     public async Task<string> ShowPromptOptionsAsync(string message, List<string> items, CancellationToken cancellationToken)
     {
