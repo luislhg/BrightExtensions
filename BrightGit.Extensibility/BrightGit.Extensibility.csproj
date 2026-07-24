@@ -11,10 +11,14 @@
 		<Version>1.0.0.0</Version>
 	</PropertyGroup>
 	<ItemGroup>
+		<None Remove="Windows\ProgressWindowContent.xaml" />
 		<None Remove="Windows\SettingsWindowContent.xaml" />
 		<None Remove="Windows\TabsWindowContent.xaml" />
 	</ItemGroup>
 	<ItemGroup>
+		<EmbeddedResource Include="Windows\ProgressWindowContent.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</EmbeddedResource>
 		<EmbeddedResource Include="Windows\SettingsWindowContent.xaml">
 			<Generator>MSBuild:Compile</Generator>
 		</EmbeddedResource>
