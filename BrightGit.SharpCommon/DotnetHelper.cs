@@ -3,17 +3,17 @@
 namespace BrightGit.SharpCommon;
 public static class DotnetHelper
 {
-    public static Task<bool> UpdateDatabaseEFCoreAsync(string projectDir, string migrationName)
+    public static Task<bool> UpdateDatabaseEFCoreAsync(string projectDir, string migrationName, CancellationToken cancellationToken = default)
     {
-        return RunDotnetCommandAsync(projectDir, $"ef database update {migrationName}");
+        return RunDotnetCommandAsync(projectDir, $"ef database update {migrationName}", cancellationToken);
     }
 
-    public static Task<bool> RestoreProjectAsync(string projectDir)
+    public static Task<bool> RestoreProjectAsync(string projectDir, CancellationToken cancellationToken = default)
     {
-        return RunDotnetCommandAsync(projectDir, "restore");
+        return RunDotnetCommandAsync(projectDir, "restore", cancellationToken);
     }
 
-    public static async Task<bool> RunDotnetCommandAsync(string projectDir, string arguments)
+    public static async Task<bool> RunDotnetCommandAsync(string projectDir, string arguments, CancellationToken cancellationToken = default)
     {
         ProcessStartInfo startInfo = new ProcessStartInfo
         {
@@ -34,7 +34,25 @@ public static class DotnetHelper
             process.Start();
             process.BeginOutputReadLine();
             process.BeginErrorReadLine();
-            await process.WaitForExitAsync();
+
+            try
+            {
+                await process.WaitForExitAsync(cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                // Kill the whole tree ('dotnet' spawns child processes like MSBuild) and rethrow.
+                try
+                {
+                    process.Kill(entireProcessTree: true);
+                    process.WaitForExit(3000);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex.Message);
+                }
+                throw;
+            }
 
             return process.ExitCode == 0;
         }

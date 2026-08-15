@@ -263,10 +263,10 @@ public static class GitHelper
         return branches.FirstOrDefault()?.FriendlyName;
     }
 
-    public static Task<bool> AddWorktreeAsync(string repoDir, string worktreePath, string committish)
+    public static Task<bool> AddWorktreeAsync(string repoDir, string worktreePath, string committish, CancellationToken cancellationToken = default)
     {
         // Detached so it works even if the committish is a branch checked out elsewhere.
-        return RunGitCommandAsync(repoDir, $"worktree add --detach \"{worktreePath}\" \"{committish}\"");
+        return RunGitCommandAsync(repoDir, $"worktree add --detach \"{worktreePath}\" \"{committish}\"", cancellationToken);
     }
 
     public static Task<bool> RemoveWorktreeAsync(string repoDir, string worktreePath)
@@ -279,7 +279,7 @@ public static class GitHelper
         return RunGitCommandAsync(repoDir, "worktree prune");
     }
 
-    public static async Task<bool> RunGitCommandAsync(string repoDir, string arguments)
+    public static async Task<bool> RunGitCommandAsync(string repoDir, string arguments, CancellationToken cancellationToken = default)
     {
         ProcessStartInfo startInfo = new ProcessStartInfo
         {
@@ -300,7 +300,25 @@ public static class GitHelper
             process.Start();
             process.BeginOutputReadLine();
             process.BeginErrorReadLine();
-            await process.WaitForExitAsync();
+
+            try
+            {
+                await process.WaitForExitAsync(cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                // Kill the process and rethrow.
+                try
+                {
+                    process.Kill(entireProcessTree: true);
+                    process.WaitForExit(3000);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex.Message);
+                }
+                throw;
+            }
 
             return process.ExitCode == 0;
         }

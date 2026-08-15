@@ -91,12 +91,20 @@ public class EFCoreManagerService
                 Directory.CreateDirectory(Path.GetDirectoryName(worktreePath));
 
                 // Report progress through a dialog or the VS status bar (restore + build + database update can take quite a few seconds).
+                // Closing the dialog (or clicking cancel in the status bar) cancels the operation.
                 Action<int, string> reportProgress;
                 Func<Task> completeProgressAsync;
+                CancellationToken cancelToken;
+                using var dialogClosedCts = new CancellationTokenSource();
                 if (ShowProgressDialog)
                 {
                     dialogService.Shell = shell;
                     var dialogTask = dialogService.ShowDialogProgressAsync($"Reverting EF Core migrations from '{oldBranchName}'", out var updateDialog, CancellationToken.None);
+
+                    // If the dialog closes before we complete it programmatically (user clicked Close/X), request cancellation.
+                    _ = dialogTask.ContinueWith(_ => { try { dialogClosedCts.Cancel(); } catch { } }, TaskScheduler.Default);
+                    cancelToken = dialogClosedCts.Token;
+
                     reportProgress = (percent, message) => updateDialog(percent, message, false);
                     completeProgressAsync = async () =>
                     {
@@ -117,16 +125,25 @@ public class EFCoreManagerService
                 }
                 else
                 {
-                    var progressReporter = await shell.StartProgressReportingAsync("Reverting EF Core migrations", new(false), CancellationToken.None);
+                    var progressReporter = await shell.StartProgressReportingAsync("Reverting EF Core migrations", new(true), CancellationToken.None);
+                    cancelToken = progressReporter.CancellationToken;
                     reportProgress = (percent, message) => progressReporter.Report(new ProgressStatus(percent, message));
                     completeProgressAsync = () => { progressReporter.Dispose(); return Task.CompletedTask; };
                 }
 
                 string errorMessage, commonMigrationName;
+                bool canceled = false;
                 sw.Restart();
                 try
                 {
-                    (errorMessage, commonMigrationName) = await RevertMigrationsInWorktreeAsync(solutionDir, oldBranchName, worktreePath, currentBranchDiskMigrations, reportProgress);
+                    (errorMessage, commonMigrationName) = await RevertMigrationsInWorktreeAsync(solutionDir, oldBranchName, worktreePath, currentBranchDiskMigrations, reportProgress, cancelToken);
+                }
+                catch (OperationCanceledException)
+                {
+                    logger.TraceInformation("Migration revert canceled by the user.");
+                    errorMessage = null;
+                    commonMigrationName = null;
+                    canceled = true;
                 }
                 finally
                 {
@@ -138,6 +155,13 @@ public class EFCoreManagerService
                 sw.Stop();
 
                 // Inform the user about the result (only after the progress is closed).
+                if (canceled)
+                {
+                    //await shell.ShowPromptAsync("Operation canceled.\nIf the database update had already started, you may have to finish it manually.", PromptOptions.OK, CancellationToken.None);
+                    await shell.ShowPromptAsync("Operation canceled.", PromptOptions.OK, CancellationToken.None);
+                    return false;
+                }
+
                 if (errorMessage != null)
                 {
                     await shell.ShowPromptAsync(errorMessage, PromptOptions.OK, CancellationToken.None);
@@ -169,20 +193,22 @@ public class EFCoreManagerService
                                                                                                    string oldBranchName,
                                                                                                    string worktreePath,
                                                                                                    List<string> currentBranchDiskMigrations,
-                                                                                                   Action<int, string> reportProgress)
+                                                                                                   Action<int, string> reportProgress,
+                                                                                                   CancellationToken cancellationToken)
     {
         var sw = new Stopwatch();
 
         // Create the temporary worktree of the old branch.
         logger.TraceInformation($"Creating temporary worktree of '{oldBranchName}' at '{worktreePath}'.");
         reportProgress(5, $"Creating temporary copy of '{oldBranchName}'");
-        if (!await GitHelper.AddWorktreeAsync(solutionDir, worktreePath, oldBranchName))
+        if (!await GitHelper.AddWorktreeAsync(solutionDir, worktreePath, oldBranchName, cancellationToken))
         {
             logger.TraceEvent(TraceEventType.Error, 0, "Failed to create temporary worktree.");
             return ("Failed to create a temporary git worktree (is git available on PATH?).\nYou'll have to update the database manually.", null);
         }
 
         // Find the migrations directory and project inside the worktree (old branch content).
+        cancellationToken.ThrowIfCancellationRequested();
         string worktreeMigrationDir = MigratorHelper.GetMigrationsDirectory(worktreePath);
         string worktreeProjectPath = worktreeMigrationDir != null ? MigratorHelper.GetProjectFilePathFromInsideOut(worktreeMigrationDir) : null;
         if (worktreeProjectPath == null)
@@ -196,7 +222,7 @@ public class EFCoreManagerService
         logger.TraceInformation("Restoring NuGet packages in the worktree.");
         reportProgress(20, "Restoring NuGet packages");
         sw.Restart();
-        if (!await DotnetHelper.RestoreProjectAsync(worktreeProjectDirectory))
+        if (!await DotnetHelper.RestoreProjectAsync(worktreeProjectDirectory, cancellationToken))
         {
             logger.TraceEvent(TraceEventType.Error, 0, "Failed to restore NuGet packages in the worktree.");
             return ("Error restoring NuGet packages for the migrations project.\nYou'll have to update the database manually.", null);
@@ -206,6 +232,7 @@ public class EFCoreManagerService
         Debug.WriteLine($"NuGet packages restored ({sw.ElapsedMilliseconds}ms).");
 
         // Get the latest common migration between the two branches (compare by file name since the lists come from different directories).
+        cancellationToken.ThrowIfCancellationRequested();
         var oldBranchDiskMigrations = MigratorHelper.FindMigrationsInDir(worktreeMigrationDir);
         var commonMigration = MigratorHelper.GetLatestCommonNameBetweenTwoLists(oldBranchDiskMigrations.Select(Path.GetFileName).ToList(),
                                                                                 currentBranchDiskMigrations.Select(Path.GetFileName).ToList());
@@ -217,6 +244,7 @@ public class EFCoreManagerService
         logger.TraceInformation($"Updating database down to migration '{commonMigrationName}'.");
         reportProgress(40, $"Updating database down to '{commonMigrationName}'");
         sw.Restart();
+        // We wont pass cancellation token here on purpose, aborting the EF Migratrion could lead to an unknown migration state.
         if (!await DotnetHelper.UpdateDatabaseEFCoreAsync(worktreeProjectDirectory, commonMigrationName))
         {
             logger.TraceEvent(TraceEventType.Error, 0, "UpdateDatabaseEFCoreAsync failed.");
