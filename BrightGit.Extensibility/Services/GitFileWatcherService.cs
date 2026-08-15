@@ -128,8 +128,9 @@ public class GitFileWatcherService
                     _ = efCoreManagerService.CheckMigrationsAsync(SolutionDir, oldBranchName, CurrentBranchName);
 
                     // Trigger: Save and restore tabs.
-                    tabManagerService.Extensibility = Extensibility;
-                    _ = tabManagerService.SaveAndRestoreTabsAsync(SolutionDir, oldBranchName, CurrentBranchName);
+                    // Disabled for now, maybe VS Worktree will be enough, maybe we can add a setting to enable/disable this feature.
+                    //tabManagerService.Extensibility = Extensibility;
+                    //_ = tabManagerService.SaveAndRestoreTabsAsync(SolutionDir, oldBranchName, CurrentBranchName);
                 }
             }
         }
