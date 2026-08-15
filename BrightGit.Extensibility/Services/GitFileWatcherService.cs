@@ -38,6 +38,16 @@ public class GitFileWatcherService
     {
         if (!IsMonitoring)
         {
+            // This might be needed because of VSExtensibility git issue #390 if we don't set csproj runtime to win-x64.
+            //try
+            //{
+            //    LibGit2SharpHelper.RegisterNativePath();
+            //}
+            //catch (Exception ex)
+            //{
+            //    logger.TraceEvent(TraceEventType.Error, 0, $"Error registering LibGit2Sharp Native Path: {ex}");
+            //}
+
             try
             {
                 SolutionDir = await VSHelper.GetSolutionDirectoryAsync(Extensibility.Workspaces(), CancellationToken.None);

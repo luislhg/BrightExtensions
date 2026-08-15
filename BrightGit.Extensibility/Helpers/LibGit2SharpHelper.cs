@@ -2,9 +2,10 @@
 using System.Reflection;
 
 namespace BrightGit.Extensibility.Helpers;
+
 internal static class LibGit2SharpHelper
 {
-    public static void RegisterNativePath(string path)
+    public static void RegisterNativePath()
     {
         // We check first because if we overwrite after in use, it will throw an exception.
         if (GlobalSettings.NativeLibraryPath == null)
