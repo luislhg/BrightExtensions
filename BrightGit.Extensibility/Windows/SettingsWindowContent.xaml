@@ -31,32 +31,38 @@
         </Grid.RowDefinitions>
         <ScrollViewer VerticalScrollBarVisibility="Auto">
             <StackPanel>
-                <!-- Tabs -->
-                <Separator Margin="10"/>
-                <GroupBox>
+                <!-- EFCore -->
+                <Separator Margin="10" Visibility="Collapsed"/>
+                <GroupBox Visibility="Visible">
                     <GroupBox.Header>
-                        <TextBlock Text="Tabs" FontWeight="Bold" />
+                        <TextBlock Text="EF Core - Auto Migration" FontWeight="Bold" />
                     </GroupBox.Header>
                     <StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,5">
-                            <CheckBox IsChecked="{Binding SettingsData.Tabs.CloseTabsOnSave}"/>
-                            <TextBlock Text="Close tabs after manual Save" />
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,5">
-                            <CheckBox IsChecked="{Binding SettingsData.Tabs.CloseTabsOnBranchChange}"/>
-                            <TextBlock Text="Close tabs after changing branch" />
+                            <CheckBox IsChecked="{Binding SettingsData.EFCore.IsEnabled}"/>
+                            <TextBlock Text="Enabled" />
                         </StackPanel>
                     </StackPanel>
                 </GroupBox>
-
-                <!-- EFCore -->
-                <Separator Margin="10" Visibility="Collapsed"/>
-                <GroupBox Visibility="Collapsed">
+                
+                <!-- Tabs -->
+                <Separator Margin="10"/>
+                <GroupBox Visibility="Visible">
                     <GroupBox.Header>
-                        <TextBlock Text="EF Core" FontWeight="Bold" />
+                        <TextBlock Text="Tabs - Auto Save/Restore" FontWeight="Bold" />
                     </GroupBox.Header>
                     <StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,5">
+                        <StackPanel Orientation="Horizontal" Margin="0,5,0,5">
+                            <CheckBox IsChecked="{Binding SettingsData.Tabs.IsEnabled}"/>
+                            <TextBlock Text="Enabled" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,5,0,5">
+                            <CheckBox IsChecked="{Binding SettingsData.Tabs.CloseTabsOnBranchChange}"/>
+                            <TextBlock Text="Close tabs after changing branch" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,5,0,5">
+                            <CheckBox IsChecked="{Binding SettingsData.Tabs.CloseTabsOnSave}"/>
+                            <TextBlock Text="Close tabs after manual Save" />
                         </StackPanel>
                     </StackPanel>
                 </GroupBox>

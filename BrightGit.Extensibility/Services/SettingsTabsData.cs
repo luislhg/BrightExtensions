@@ -2,12 +2,13 @@
 using System.Runtime.Serialization;
 
 namespace BrightGit.Extensibility.Services;
+
 [DataContract]
 public class SettingsTabsData : ObservableObject
 {
     [DataMember]
     public bool IsEnabled { get => isEnabled; set => SetProperty(ref isEnabled, value); }
-    private bool isEnabled;
+    private bool isEnabled = false;
 
     [DataMember]
     public bool CloseTabsOnSave { get => closeTabsOnSave; set => SetProperty(ref closeTabsOnSave, value); }

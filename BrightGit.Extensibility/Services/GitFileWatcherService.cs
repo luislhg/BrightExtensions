@@ -124,13 +124,18 @@ public class GitFileWatcherService
                     logger.TraceInformation($"Branch changed from {oldBranchName} to {currentBranch}.");
 
                     // Trigger: Update EF Core context.
-                    efCoreManagerService.Extensibility = Extensibility;
-                    _ = efCoreManagerService.CheckMigrationsAsync(SolutionDir, oldBranchName, CurrentBranchName);
+                    if (settingsService.Data.EFCore.IsEnabled)
+                    {
+                        efCoreManagerService.Extensibility = Extensibility;
+                        _ = efCoreManagerService.CheckMigrationsAsync(SolutionDir, oldBranchName, CurrentBranchName);
+                    }
 
                     // Trigger: Save and restore tabs.
-                    // Disabled for now, maybe VS Worktree will be enough, maybe we can add a setting to enable/disable this feature.
-                    //tabManagerService.Extensibility = Extensibility;
-                    //_ = tabManagerService.SaveAndRestoreTabsAsync(SolutionDir, oldBranchName, CurrentBranchName);
+                    if (settingsService.Data.Tabs.IsEnabled)
+                    {
+                        tabManagerService.Extensibility = Extensibility;
+                        _ = tabManagerService.SaveAndRestoreTabsAsync(SolutionDir, oldBranchName, CurrentBranchName);
+                    }
                 }
             }
         }
