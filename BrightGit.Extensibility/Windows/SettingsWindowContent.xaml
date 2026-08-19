@@ -2,6 +2,7 @@
               xmlns:local="clr-namespace:BrightGit.Extensibility.Windows"
               xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
               xmlns:vs="http://schemas.microsoft.com/visualstudio/extensibility/2022/xaml"
+              xmlns:converters="clr-namespace:System.Windows.Converters;assembly=WindowsBase"
               xmlns:styles="clr-namespace:Microsoft.VisualStudio.Shell;assembly=Microsoft.VisualStudio.Shell.15.0"
               xmlns:colors="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.15.0"
               DataType="local:SettingsWindowViewModel">
@@ -32,8 +33,8 @@
         <ScrollViewer VerticalScrollBarVisibility="Auto">
             <StackPanel>
                 <!-- EFCore -->
-                <Separator Margin="10" Visibility="Collapsed"/>
-                <GroupBox Visibility="Visible">
+                <Separator Margin="10"/>
+                <GroupBox>
                     <GroupBox.Header>
                         <TextBlock Text="EF Core - Auto Migration" FontWeight="Bold" />
                     </GroupBox.Header>
@@ -46,8 +47,8 @@
                 </GroupBox>
                 
                 <!-- Tabs -->
-                <Separator Margin="10"/>
-                <GroupBox Visibility="Visible">
+                <Separator Margin="10" Visibility="{Binding DebugVisibility}"/>
+                <GroupBox Visibility="{Binding DebugVisibility}">
                     <GroupBox.Header>
                         <TextBlock Text="Tabs - Auto Save/Restore" FontWeight="Bold" />
                     </GroupBox.Header>

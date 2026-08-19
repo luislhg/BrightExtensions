@@ -4,6 +4,7 @@ using BrightGit.Extensibility.Services;
 using Microsoft.VisualStudio.Extensibility.UI;
 using System.Runtime.Serialization;
 using System.Text.Json;
+using System.Windows;
 
 [DataContract]
 internal class SettingsWindowViewModel : NotifyPropertyChangedObject
@@ -21,6 +22,9 @@ internal class SettingsWindowViewModel : NotifyPropertyChangedObject
 
     [DataMember]
     public AsyncCommand CancelCommand { get; }
+
+    [DataMember]
+    public Visibility DebugVisibility => Meta.IsDebug ? Visibility.Visible : Visibility.Collapsed;
 
     [DataMember]
     public string Version { get; } = Meta.Version.ToString();

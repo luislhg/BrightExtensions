@@ -26,7 +26,7 @@ internal class EFGitMigrationDownCommand : Command
     }
 
     /// <inheritdoc />
-    public override CommandConfiguration CommandConfiguration => new(displayName: "EF Core - Reset Branch Migrations from Database")
+    public override CommandConfiguration CommandConfiguration => new(displayName: "EF Core - Down DB Migrations from Branch")
     {
         //Placements = [CommandPlacement.KnownPlacements.ExtensionsMenu],
         Icon = new(ImageMoniker.KnownValues.LinkedDatabase, IconSettings.IconAndText),

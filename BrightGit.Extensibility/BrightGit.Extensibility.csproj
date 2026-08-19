@@ -4,8 +4,8 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>disable</Nullable>
 
-		<!--This helps LibGit2Sharp to work with the project w/o calling native library-->
-		<!--TODO: Check if extension will work fine with VS in all cases (x64, ARM, etc)-->
+		<!-- TODO: This helps LibGit2Sharp to work w/o setting global native library path (Extensibility issue on Github) -->
+		<!-- This workaround limits the extension to VS-x64 only (wont work on ARM), but we don't need to set the native library path... -->
 		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
 		
 		<Version>1.0.0.0</Version>

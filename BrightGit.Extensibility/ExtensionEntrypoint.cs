@@ -49,11 +49,11 @@ internal class ExtensionEntrypoint : Extension
 
     protected override async Task OnInitializedAsync(VisualStudioExtensibility extensibility, CancellationToken cancellationToken)
     {
-        // Start monitoring Git hooks.
+        // Option A - Git hooks) Start monitoring Git hooks.
         //base.ServiceProvider.GetRequiredService<GitSharpHookService>().Extensibility = extensibility;
         //_ = base.ServiceProvider.GetRequiredService<GitSharpHookService>().StartMonitoringAsync();
 
-        // Start monitoring Git HEAD.
+        // Option B - FileWatcher) Start monitoring Git HEAD.
         base.ServiceProvider.GetRequiredService<GitFileWatcherService>().Extensibility = extensibility;
         _ = base.ServiceProvider.GetRequiredService<GitFileWatcherService>().StartMonitoringAsync();
 
@@ -81,24 +81,37 @@ internal class ExtensionEntrypoint : Extension
         Children = new[]
         {
             MenuChild.Command<EFGitMigrationDownCommand>(),
+
+#if DEBUG
+            // This was a previous attempt using Git hooks to trigger EF Core migrations on git events.
+            // Right now we're testing a FileWatcher approach where we monitor the .git/HEAD file for changes and trigger migrations when it changes.
             MenuChild.Separator,
             MenuChild.Command<EFGitMigrationHookAddCommand>(),
             MenuChild.Command<EFGitMigrationHookRemoveCommand>(),
             MenuChild.Command<EFGitMigrationHookCheckCommand>(),
+#endif
 
+#if DEBUG
+            // This still needs lot of work due to some limitationf of the new VS Extensibility API.
             MenuChild.Separator,
             MenuChild.Command<TabsSaveCommand>(),
             MenuChild.Command<TabsRestoreCommand>(),
+#endif
+
 #if DEBUG
+            // This is for Development/Debug only.
             MenuChild.Separator,
             MenuChild.Command<TabsSortCommand>(),
             MenuChild.Command<EFGitTest>(),
 #endif
-            MenuChild.Separator,
-            MenuChild.Command<SettingsWindowCommand>(),
+
 #if DEBUG
             MenuChild.Command<TabsWindowCommand>(),
 #endif
+
+            // Settings Window.
+            MenuChild.Separator,
+            MenuChild.Command<SettingsWindowCommand>(),
             //MenuChild.Command<HelpWindowCommand>(),
         },
     };
