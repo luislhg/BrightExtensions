@@ -60,6 +60,139 @@ public static class PropToInpcHelper
         return null;
     }
 
+    /// <summary>
+    /// Combines a multi-line property declaration into a single line for parsing.
+    /// Preserves the indentation from the first line.
+    /// </summary>
+    /// <param name="fullText">The complete text content of the document.</param>
+    /// <param name="caretOffset">The current caret position offset.</param>
+    /// <param name="replaceStartOffset">Output: The starting offset of the property in the document.</param>
+    /// <param name="replaceLength">Output: The length of the property text to replace.</param>
+    /// <returns>A single-line representation of the property, or null if not found.</returns>
+    public static string CombineMultiLineProperty(string fullText, int caretOffset, out int replaceStartOffset, out int replaceLength)
+    {
+        replaceStartOffset = -1;
+        replaceLength = -1;
+
+        if (string.IsNullOrEmpty(fullText))
+            return null;
+
+        var lines = fullText.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+
+        // Find the line number of the current line.
+        int currentLineIndex = 0;
+        int currentOffset = 0;
+        foreach (var l in lines)
+        {
+            if (currentOffset + l.Length >= caretOffset)
+                break;
+            currentOffset += l.Length + Environment.NewLine.Length;
+            currentLineIndex++;
+        }
+
+        // Get the current line content.
+        string currentLine = currentLineIndex < lines.Length ? lines[currentLineIndex] : string.Empty;
+
+        // If current line already has both braces, return null (single line case).
+        if (currentLine.Contains("{") && currentLine.Contains("}"))
+            return null;
+
+        // If current line is empty or only contains whitespace, return null.
+        if (string.IsNullOrWhiteSpace(currentLine))
+            return null;
+
+        // Search upwards to find the start of the property (line with property declaration).
+        // A property declaration line has: access_modifier type name OR type name (without braces on same line).
+        int startLineIndex = currentLineIndex;
+        bool foundPropertyDeclaration = false;
+        for (int i = currentLineIndex; i >= 0 && i >= currentLineIndex - 10; i--)
+        {
+            if (i < lines.Length)
+            {
+                var line = lines[i].TrimStart();
+                // Look for property declaration: access modifier followed by type and name
+                // Ensure we're not on a line that's just an accessor (contains get; or set;)
+                bool hasAccessModifier = line.StartsWith("public ") || line.StartsWith("private ") ||
+                                        line.StartsWith("protected ") || line.StartsWith("internal ");
+                bool hasGetOrSet = line.Contains("get;") || line.Contains("set;");
+
+                // Skip lines that are class/method declarations (contain class, void, etc.)
+                bool isClassOrMethod = line.Contains(" class ") || line.Contains("void ") || 
+                                       line.Contains("(") || line.Contains(")");
+
+                if (hasAccessModifier && !hasGetOrSet && !isClassOrMethod)
+                {
+                    startLineIndex = i;
+                    foundPropertyDeclaration = true;
+                    break;
+                }
+            }
+        }
+
+        // If we didn't find a property declaration, return null.
+        if (!foundPropertyDeclaration)
+            return null;
+
+        // Search downwards to find the closing brace.
+        int endLineIndex = currentLineIndex;
+        bool foundOpenBrace = currentLine.Contains("{");
+        bool foundCloseBrace = currentLine.Contains("}");
+
+        for (int i = startLineIndex; i < lines.Length && i <= startLineIndex + 10; i++)
+        {
+            if (lines[i].Contains("{"))
+                foundOpenBrace = true;
+            if (lines[i].Contains("}"))
+            {
+                foundCloseBrace = true;
+                endLineIndex = i;
+                break;
+            }
+        }
+
+        // Return null if we didn't find both braces.
+        if (!foundOpenBrace || !foundCloseBrace)
+            return null;
+
+        // Verify that the current line is within the property range (startLineIndex to endLineIndex).
+        if (currentLineIndex < startLineIndex || currentLineIndex > endLineIndex)
+            return null;
+
+        // Combine lines.
+        var propertyLines = new List<string>();
+        for (int i = startLineIndex; i <= endLineIndex; i++)
+        {
+            if (i < lines.Length)
+                propertyLines.Add(lines[i]);
+        }
+
+        // Combine into single line for parsing, preserving first line's indentation.
+        string indent = new string(' ', propertyLines[0].Length - propertyLines[0].TrimStart().Length);
+        var combined = string.Join(" ", propertyLines.Select(l => l.Trim()));
+        string propertyText = indent + combined;
+
+        // Validate that the combined text is actually an auto-property (must contain get; and set;).
+        if (!propertyText.Contains("get;") || !propertyText.Contains("set;"))
+            return null;
+
+        // Calculate the offset and length to replace.
+        replaceStartOffset = 0;
+        for (int i = 0; i < startLineIndex; i++)
+        {
+            replaceStartOffset += lines[i].Length + Environment.NewLine.Length;
+        }
+
+        replaceLength = 0;
+        for (int i = startLineIndex; i <= endLineIndex; i++)
+        {
+            replaceLength += lines[i].Length;
+            if (i < endLineIndex)
+                replaceLength += Environment.NewLine.Length;
+        }
+
+        return propertyText;
+    }
+
     public static string GenerateInpcPropertySetFieldKeyword(PropertyLineData property, bool preserveDefaultValue, string setMethodName)
     {
         // If property.Name starts with lower case, throw an exception.
