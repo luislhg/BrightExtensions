@@ -14,13 +14,25 @@ public class ShowDefinitionHelperTests
     }
 
     [TestMethod()]
-    [DataRow("WinDivert.MainWindowViewModel", "WinDivert\\MainWindowViewModel.cs")]
-    [DataRow("WinDivert.Wpf.MainWindowViewModel", "WinDivert.Wpf\\MainWindowViewModel.cs")]
-    [DataRow("WinDivert.Common.Wpf.MainWindowViewModel", "WinDivert.Common.Wpf\\MainWindowViewModel.cs")]
-    [DataRow("MainWindowViewModel", "MainWindowViewModel.cs")]
-    public void FixSegmentPathTest(string segmentInput, string expected)
+    [DataRow("ProjectWpf.MainClass.cs", "ProjectWpf\\MainClass.cs")]
+    [DataRow("ProjectWpf.MainClass.g.cs", "ProjectWpf\\MainClass.cs")]
+    [DataRow("ProjectWpf.Common.MainClass.cs", "ProjectWpf.Common\\MainClass.cs")]
+    [DataRow("ProjectWpf.Common.MainClass.g.cs", "ProjectWpf.Common\\MainClass.cs")]
+    public void FindFileFromUriSegmentTest(string lastSegment, string expected)
     {
-        string actual = ShowDefinitionHelper.FixSegmentPath(segmentInput);
+        expected = $"D:\\Projects Visual Studio\\Github Projects\\Bright Extensions Tests\\{expected}";
+
+        List<string> filesFound = new List<string>
+        {
+            "D:\\Projects Visual Studio\\Github Projects\\Bright Extensions Tests\\ProjectWpf\\MainClass.cs",
+            "D:\\Projects Visual Studio\\Github Projects\\Bright Extensions Tests\\ProjectWpf.Common\\MainClass.cs",
+            "D:\\Projects Visual Studio\\Github Projects\\Bright Extensions Tests\\ProjectWpf.Common\\Pages\\MainClass.cs",
+            "D:\\Projects Visual Studio\\Github Projects\\Bright Extensions Tests\\ProjectWpf.Common.Windows\\MainClass.cs",
+            "D:\\Projects Visual Studio\\Github Projects\\Bright Extensions Tests\\ProjectWpf.Common.Windows\\Pages\\MainClass.cs",
+        };
+
+        var actual = ShowDefinitionHelper.FindCorrectFile(filesFound, lastSegment);
+
         Assert.AreEqual(expected, actual);
     }
 }

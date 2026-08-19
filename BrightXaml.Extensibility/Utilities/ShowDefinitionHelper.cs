@@ -185,13 +185,39 @@ public static class ShowDefinitionHelper
         return -1;
     }
 
-    public static string FixSegmentPath(string segment)
+    public static string FindCorrectFile(List<string> filesFound, string viewModelSegmentPath)
     {
-        // Replace ONLY the last '.'
-        int lastDot = segment.LastIndexOf('.');
-        if (lastDot < 0)
-            return segment + ".cs";
+        if (filesFound == null || filesFound.Count == 0)
+            return null;
 
-        return string.Concat(segment.AsSpan(0, lastDot), "\\", segment.AsSpan(lastDot + 1), ".cs");
+        if (filesFound.Count == 1)
+            return filesFound[0];
+
+        // Normalize the viewModelSegmentPath to match the file paths.
+        viewModelSegmentPath = viewModelSegmentPath.Replace(".g.cs", ".cs");
+
+        // Try to find the correct file by matching the segment path with the file paths.
+        return filesFound.FirstOrDefault(file => MatchesSegmentPath(file, viewModelSegmentPath)) ?? filesFound[0];
+    }
+
+    private static bool MatchesSegmentPath(string file, string segmentPath)
+    {
+        var currentPath = file;
+        var currentSegment = Path.GetFileName(currentPath);
+
+        while (!string.IsNullOrEmpty(currentPath))
+        {
+            if (string.Equals(currentSegment, segmentPath, StringComparison.OrdinalIgnoreCase))
+                return true;
+
+            currentPath = Path.GetDirectoryName(currentPath);
+
+            if (string.IsNullOrEmpty(currentPath))
+                break;
+
+            currentSegment = $"{Path.GetFileName(currentPath)}.{currentSegment}";
+        }
+
+        return false;
     }
 }

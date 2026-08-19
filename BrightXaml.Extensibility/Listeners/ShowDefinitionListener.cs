@@ -136,16 +136,16 @@ public partial class ShowDefinitionListener : ExtensionPart, ITextViewOpenClosed
                     }
 
                     // Find the file in the project.
-                    var viewModelRelPath = textView.Document.Uri.Segments.LastOrDefault().Replace($".{methodName}.g.cs", string.Empty);
-                    viewModelRelPath = ShowDefinitionHelper.FixSegmentPath(viewModelRelPath);
+                    var lastSegment = textView.Document.Uri.Segments.LastOrDefault();
+                    var viewModelRelPath = lastSegment.Replace(".g.cs", string.Empty).Replace(".", "\\") + ".cs";
                     var viewModelFileName = Path.GetFileName(viewModelRelPath);
                     var files = await Extensibility.Workspaces()
                                     .QueryProjectsAsync(project => project
                                         .Get(p => p.Files)
-                                        .Where(f => f.Path.EndsWith(viewModelRelPath, StringComparison.InvariantCultureIgnoreCase))
+                                        .Where(f => f.Path.EndsWith(viewModelFileName, StringComparison.InvariantCultureIgnoreCase))
                                         .With(f => new { f.FileName, f.Path }), cancellationToken);
-
-                    var result = files.FirstOrDefault().Path;
+                    var filesFound = files.Select(p => p.Path).ToList();
+                    var result = ShowDefinitionHelper.FindCorrectFile(filesFound, lastSegment);
                     Debug.WriteLine($"ViewModel path: {result} ({sw.ElapsedMilliseconds}ms)");
 
                     // Open the file where the binding is defined.
@@ -199,17 +199,17 @@ public partial class ShowDefinitionListener : ExtensionPart, ITextViewOpenClosed
                             }
                         }
 
-                        // Find the file in the project.
-                        var viewModelRelPath = textView.Document.Uri.Segments.LastOrDefault().Replace($".g.cs", string.Empty);
-                        viewModelRelPath = ShowDefinitionHelper.FixSegmentPath(viewModelRelPath);
+                        // Find the file in the project (e.g. "D:\\Projects\\MyProject\\MyClass.g.cs").
+                        var lastSegment = textView.Document.Uri.Segments.LastOrDefault();
+                        var viewModelRelPath = lastSegment.Replace(".g.cs", string.Empty).Replace(".", "\\") + ".cs";
                         var viewModelFileName = Path.GetFileName(viewModelRelPath);
                         var files = await Extensibility.Workspaces()
                                         .QueryProjectsAsync(project => project
                                             .Get(p => p.Files)
-                                            .Where(f => f.Path.EndsWith(viewModelRelPath, StringComparison.InvariantCultureIgnoreCase))
+                                            .Where(f => f.Path.EndsWith(viewModelFileName, StringComparison.InvariantCultureIgnoreCase))
                                             .With(f => new { f.FileName, f.Path }), cancellationToken);
-
-                        var result = files.FirstOrDefault().Path;
+                        var filesFound = files.Select(p => p.Path).ToList();
+                        var result = ShowDefinitionHelper.FindCorrectFile(filesFound, lastSegment);
                         Debug.WriteLine($"ViewModel path: {result} ({sw.ElapsedMilliseconds}ms)");
 
                         // Open the file where the binding is defined.
